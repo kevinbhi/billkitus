@@ -20,7 +20,7 @@ public class BusinessPatchRequest {
     private String state;
 
     @Positive(message = "ZipCode must be positive")
-    private Integer zipCode;
+    private String zipCode;
 
     @Size(min = 2, message = "InvoicePrefix must be at least 2 characters")
     private String invoicePrefix;

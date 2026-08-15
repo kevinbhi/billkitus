@@ -44,4 +44,11 @@ public class BusinessController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<List<BusinessResponse>> getAllBusinessesForUser(@RequestParam Long userId) {
+        return ResponseEntity.ok(businessService.getAllBusinessesForUser(userId));
+    }
+
+
+
 }

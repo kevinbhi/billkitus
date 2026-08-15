@@ -29,17 +29,17 @@ public class UserController {
     }
 
     @PutMapping(value = "/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequest userRequest) {
         return ResponseEntity.ok(userService.updateUser(id, userRequest));
     }
 
     @PatchMapping(value = "/{id}")
-    public ResponseEntity<UserResponse> patchUser(@PathVariable Integer id, @Valid @RequestBody UserPatchRequest userPatchRequest) {
+    public ResponseEntity<UserResponse> patchUser(@PathVariable Long id, @Valid @RequestBody UserPatchRequest userPatchRequest) {
         return ResponseEntity.ok(userService.patchUser(id, userPatchRequest));
     }
 
     @DeleteMapping()
-    public ResponseEntity<?> deleteUser(@RequestParam Integer id) {
+    public ResponseEntity<?> deleteUser(@RequestParam Long id) {
         userService.deleteUser(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

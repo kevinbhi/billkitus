@@ -19,7 +19,7 @@ public class Business {
     private String businessName;
     private String city;
     private String state;
-    private int zipCode;
+    private String zipCode;
     private String invoicePrefix;
     private String defaultTerms;
     private long salesTaxRate;

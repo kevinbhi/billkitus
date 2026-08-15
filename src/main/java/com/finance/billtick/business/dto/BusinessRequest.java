@@ -22,7 +22,7 @@ public class BusinessRequest {
 
     @NotNull(message = "ZipCode is required")
     @Positive(message = "ZipCode must be positive")
-    private Integer zipCode;
+    private String zipCode;
 
     @NotBlank(message = "InvoicePrefix is required")
     @Size(min = 2, message = "InvoicePrefix must be at least 2 characters")
@@ -40,5 +40,5 @@ public class BusinessRequest {
     private String logo;
 
     @NotNull(message = "UserId is required")
-    private Integer userId;
+    private Long userId;
 }

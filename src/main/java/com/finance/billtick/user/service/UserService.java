@@ -32,26 +32,26 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateUser(Integer id, UserRequest userRequest) {
+    public UserResponse updateUser(Long id, UserRequest userRequest) {
         User user = assertUser(id);
         userMapper.updateUser(userRequest, user);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Transactional
-    public UserResponse patchUser(Integer id, UserPatchRequest userPatchRequest) {
+    public UserResponse patchUser(Long id, UserPatchRequest userPatchRequest) {
         User user = assertUser(id);
         userMapper.patchUser(userPatchRequest, user);
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Transactional
-    public void deleteUser(Integer id) {
+    public void deleteUser(Long id) {
         User user = assertUser(id);
         userRepository.delete(user);
     }
 
-    private User assertUser(Integer id) {
+    private User assertUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }

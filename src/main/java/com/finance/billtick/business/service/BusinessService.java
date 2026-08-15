@@ -60,8 +60,12 @@ public class BusinessService {
                 .orElseThrow(() -> new ResourceNotFoundException("Business not found with id: " + id));
     }
 
-    private User assertUser(Integer userId) {
+    private User assertUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    }
+
+    public List<BusinessResponse> getAllBusinessesForUser(Long userId) {
+        return businessMapper.toBusinessResponseList(businessRepository.findByUser(assertUser(userId)));
     }
 }
