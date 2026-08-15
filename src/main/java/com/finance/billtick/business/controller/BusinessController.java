@@ -1,10 +1,14 @@
 package com.finance.billtick.business.controller;
 
-import com.finance.billtick.business.model.Business;
-import com.finance.billtick.business.repository.BusinessRepository;
+import com.finance.billtick.business.dto.BusinessPatchRequest;
+import com.finance.billtick.business.dto.BusinessRequest;
+import com.finance.billtick.business.dto.BusinessResponse;
+import com.finance.billtick.business.service.BusinessService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -12,52 +16,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BusinessController {
 
-    private final BusinessRepository businessRepository;
+    private final BusinessService businessService;
 
-    @PostMapping("/")
-    public Business createBusiness(@RequestBody Business businessrequest) {
-        Business business = new Business();
-        business.setBusinessName(businessrequest.getBusinessName());
-        business.setCity(businessrequest.getCity());
-        business.setState(businessrequest.getState());
-        business.setZipCode(businessrequest.getZipCode());
-        business.setInvoicePrefix(businessrequest.getInvoicePrefix());
-        business.setDefaultTerms(businessrequest.getDefaultTerms());
-        business.setSalesTaxRate(businessrequest.getSalesTaxRate());
-        business.setLogo(businessrequest.getLogo());
-        businessRepository.save(business);
-        return business;
+    @PostMapping()
+    public ResponseEntity<BusinessResponse> createBusiness(@Valid @RequestBody BusinessRequest businessRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(businessService.createBusiness(businessRequest));
     }
 
-    @GetMapping(value = "/")
-    public List<Business> getAllBusinesses() {
-        return businessRepository.findAll();
+    @GetMapping()
+    public ResponseEntity<List<BusinessResponse>> getAllBusinesses() {
+        return ResponseEntity.ok(businessService.getAllBusinesses());
     }
 
-    @GetMapping(value = "/{Id}")
-    public Business getBusinessById(@PathVariable Integer Id) {
-        return businessRepository.findById(Long.valueOf(Id))
-                .orElseThrow(() -> new RuntimeException("Business not found"));
+    @PutMapping(value = "/{id}")
+    public ResponseEntity<BusinessResponse> updateBusiness(@PathVariable Long id, @Valid @RequestBody BusinessRequest businessRequest) {
+        return ResponseEntity.ok(businessService.updateBusiness(id, businessRequest));
     }
 
-    @PutMapping(value = "/{Id}")
-    public Business updateBusiness(@PathVariable Integer Id, @RequestBody Business businessrequest) {
-        Business business = businessRepository.findById(Long.valueOf(Id))
-                .orElseThrow(() -> new RuntimeException("Business not found"));
-        business.setBusinessName(businessrequest.getBusinessName());
-        business.setCity(businessrequest.getCity());
-        business.setState(businessrequest.getState());
-        business.setZipCode(businessrequest.getZipCode());
-        business.setInvoicePrefix(businessrequest.getInvoicePrefix());
-        business.setDefaultTerms(businessrequest.getDefaultTerms());
-        business.setSalesTaxRate(businessrequest.getSalesTaxRate());
-        business.setLogo(businessrequest.getLogo());
-        businessRepository.save(business);
-        return business;
+    @PatchMapping(value = "/{id}")
+    public ResponseEntity<BusinessResponse> patchBusiness(@PathVariable Long id, @Valid @RequestBody BusinessPatchRequest businessPatchRequest) {
+        return ResponseEntity.ok(businessService.patchBusiness(id, businessPatchRequest));
     }
 
-    @DeleteMapping(value = "/{Id}")
-    public void deleteBusiness(@PathVariable Integer Id) {
-        businessRepository.deleteById(Long.valueOf(Id));
+    @DeleteMapping()
+    public ResponseEntity<?> deleteBusiness(@RequestParam Long id) {
+        businessService.deleteBusiness(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+
 }
