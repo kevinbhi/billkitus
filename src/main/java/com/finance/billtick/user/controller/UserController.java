@@ -1,12 +1,13 @@
 package com.finance.billtick.user.controller;
 
-
 import com.finance.billtick.user.dto.UserPatchRequest;
 import com.finance.billtick.user.dto.UserRequest;
 import com.finance.billtick.user.dto.UserResponse;
 import com.finance.billtick.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -18,28 +19,29 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping()
-    public UserResponse createUser(@Valid @RequestBody UserRequest userRequest) {
-        return userService.createUser(userRequest);
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userRequest));
     }
 
     @GetMapping()
-    public List<UserResponse> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PutMapping(value = "/{id}")
-    public UserResponse updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequest userRequest) {
-        return userService.updateUser(id, userRequest);
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Integer id, @Valid @RequestBody UserRequest userRequest) {
+        return ResponseEntity.ok(userService.updateUser(id, userRequest));
     }
 
     @PatchMapping(value = "/{id}")
-    public UserResponse patchUser(@PathVariable Integer id, @Valid @RequestBody UserPatchRequest userPatchRequest) {
-        return userService.patchUser(id, userPatchRequest);
+    public ResponseEntity<UserResponse> patchUser(@PathVariable Integer id, @Valid @RequestBody UserPatchRequest userPatchRequest) {
+        return ResponseEntity.ok(userService.patchUser(id, userPatchRequest));
     }
 
     @DeleteMapping()
-    public void deleteUser(@RequestParam Integer id) {
+    public ResponseEntity<?> deleteUser(@RequestParam Integer id) {
         userService.deleteUser(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
 }
