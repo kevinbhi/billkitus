@@ -1,0 +1,55 @@
+package com.finance.billtick.invoice.model;
+
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.finance.billtick.product.model.Product;
+import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.type.SqlTypes;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "invoice_item")
+@Getter
+@Setter
+@NoArgsConstructor
+public class InvoiceItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 500)
+    private String description;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal quantity;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
+    private Boolean taxable;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal lineTotal;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal lineTax;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnore
+    private Invoice invoice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    @JsonIgnore
+    private Product product;
+}
