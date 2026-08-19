@@ -1,5 +1,6 @@
 package com.finance.billtick.customer.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
@@ -43,4 +44,14 @@ public class CustomerPatchRequest {
     private String certificateNumber;
 
     private LocalDate exemptionExpiryDate;
+
+    @AssertTrue(message = "ExemptionType, CertificateNumber and ExemptionExpiryDate are required when TaxExempt is true")
+    public boolean isExemptionDetailsValid() {
+        if (taxExempt == null || !taxExempt) {
+            return true;
+        }
+        return exemptionType != null && !exemptionType.isBlank()
+                && certificateNumber != null && !certificateNumber.isBlank()
+                && exemptionExpiryDate != null;
+    }
 }
