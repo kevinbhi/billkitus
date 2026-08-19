@@ -2,6 +2,7 @@ package com.finance.billtick.product.service;
 
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.business.repository.BusinessRepository;
+import com.finance.billtick.exception.DuplicateResourceException;
 import com.finance.billtick.exception.InvalidPricingException;
 import com.finance.billtick.exception.ResourceNotFoundException;
 import com.finance.billtick.product.dto.ProductPatchRequest;
@@ -28,6 +29,7 @@ public class ProductService {
     public ProductResponse createProduct(ProductRequest productRequest) {
         Product product = productMapper.toProduct(productRequest);
         product.setBusiness(assertBusiness(productRequest.getBusinessId()));
+        assertUniqueProductCode(product.getBusiness(), product.getProductCode(), null);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
         return productMapper.toProductResponse(productRepository.save(product));
     }
@@ -37,11 +39,18 @@ public class ProductService {
         return productMapper.toProductResponseList(productRepository.findAll());
     }
 
+    @Transactional(readOnly = true)
+    public ProductResponse getProductById(Long id) {
+        return productMapper.toProductResponse(assertProduct(id));
+    }
+
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest productRequest) {
         Product product = assertProduct(id);
+        Business business = assertBusiness(productRequest.getBusinessId());
+        assertUniqueProductCode(business, productRequest.getProductCode(), id);
         productMapper.updateProduct(productRequest, product);
-        product.setBusiness(assertBusiness(productRequest.getBusinessId()));
+        product.setBusiness(business);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
         return productMapper.toProductResponse(productRepository.save(product));
     }
@@ -49,6 +58,7 @@ public class ProductService {
     @Transactional
     public ProductResponse patchProduct(Long id, ProductPatchRequest productPatchRequest) {
         Product product = assertProduct(id);
+        assertUniqueProductCode(product.getBusiness(), productPatchRequest.getProductCode(), id);
         productMapper.patchProduct(productPatchRequest, product);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
         return productMapper.toProductResponse(productRepository.save(product));
@@ -73,6 +83,18 @@ public class ProductService {
     private void assertPricing(BigDecimal purchasePrice, BigDecimal sellingPrice) {
         if (sellingPrice.compareTo(purchasePrice) <= 0) {
             throw new InvalidPricingException("Selling price must be greater than purchase price");
+        }
+    }
+
+    private void assertUniqueProductCode(Business business, String productCode, Long excludeId) {
+        if (productCode == null) {
+            return;
+        }
+        boolean exists = excludeId == null
+                ? productRepository.existsByBusinessAndProductCode(business, productCode)
+                : productRepository.existsByBusinessAndProductCodeAndIdNot(business, productCode, excludeId);
+        if (exists) {
+            throw new DuplicateResourceException("Product code already exists for this business: " + productCode);
         }
     }
 

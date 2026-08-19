@@ -11,4 +11,8 @@ import java.util.List;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
     List<Customer> findByBusiness(Business business);
+
+    boolean existsByBusinessAndCustomerCode(Business business, String customerCode);
+
+    boolean existsByBusinessAndCustomerCodeAndIdNot(Business business, String customerCode, Long id);
 }

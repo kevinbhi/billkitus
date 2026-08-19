@@ -8,6 +8,7 @@ import com.finance.billtick.customer.dto.CustomerResponse;
 import com.finance.billtick.customer.mapper.CustomerMapper;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.customer.repository.CustomerRepository;
+import com.finance.billtick.exception.DuplicateResourceException;
 import com.finance.billtick.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class CustomerService {
     public CustomerResponse createCustomer(CustomerRequest customerRequest) {
         Customer customer = customerMapper.toCustomer(customerRequest);
         customer.setBusiness(assertBusiness(customerRequest.getBusinessId()));
+        assertUniqueCustomerCode(customer.getBusiness(), customer.getCustomerCode(), null);
         return customerMapper.toCustomerResponse(customerRepository.save(customer));
     }
 
@@ -34,17 +36,25 @@ public class CustomerService {
         return customerMapper.toCustomerResponseList(customerRepository.findAll());
     }
 
+    @Transactional(readOnly = true)
+    public CustomerResponse getCustomerById(Long id) {
+        return customerMapper.toCustomerResponse(assertCustomer(id));
+    }
+
     @Transactional
     public CustomerResponse updateCustomer(Long id, CustomerRequest customerRequest) {
         Customer customer = assertCustomer(id);
+        Business business = assertBusiness(customerRequest.getBusinessId());
+        assertUniqueCustomerCode(business, customerRequest.getCustomerCode(), id);
         customerMapper.updateCustomer(customerRequest, customer);
-        customer.setBusiness(assertBusiness(customerRequest.getBusinessId()));
+        customer.setBusiness(business);
         return customerMapper.toCustomerResponse(customerRepository.save(customer));
     }
 
     @Transactional
     public CustomerResponse patchCustomer(Long id, CustomerPatchRequest customerPatchRequest) {
         Customer customer = assertCustomer(id);
+        assertUniqueCustomerCode(customer.getBusiness(), customerPatchRequest.getCustomerCode(), id);
         customerMapper.patchCustomer(customerPatchRequest, customer);
         return customerMapper.toCustomerResponse(customerRepository.save(customer));
     }
@@ -63,6 +73,18 @@ public class CustomerService {
     private Business assertBusiness(Long businessId) {
         return businessRepository.findById(businessId)
                 .orElseThrow(() -> new ResourceNotFoundException("Business not found with id: " + businessId));
+    }
+
+    private void assertUniqueCustomerCode(Business business, String customerCode, Long excludeId) {
+        if (customerCode == null) {
+            return;
+        }
+        boolean exists = excludeId == null
+                ? customerRepository.existsByBusinessAndCustomerCode(business, customerCode)
+                : customerRepository.existsByBusinessAndCustomerCodeAndIdNot(business, customerCode, excludeId);
+        if (exists) {
+            throw new DuplicateResourceException("Customer code already exists for this business: " + customerCode);
+        }
     }
 
     public List<CustomerResponse> getAllCustomersForBusiness(Long businessId) {

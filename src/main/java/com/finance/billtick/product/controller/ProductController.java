@@ -28,6 +28,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+
     @PutMapping(value = "/{id}")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest productRequest) {
         return ResponseEntity.ok(productService.updateProduct(id, productRequest));
@@ -38,8 +43,8 @@ public class ProductController {
         return ResponseEntity.ok(productService.patchProduct(id, productPatchRequest));
     }
 
-    @DeleteMapping()
-    public ResponseEntity<?> deleteProduct(@RequestParam Long id) {
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

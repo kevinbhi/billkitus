@@ -38,6 +38,22 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(InvalidPricingException.class)
+    public ProblemDetail handleInvalidPricing(InvalidPricingException ex, HttpServletRequest request) {
+        log.warn("Invalid pricing: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid pricing");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ProblemDetail handleDuplicateResource(DuplicateResourceException ex, HttpServletRequest request) {
+        log.warn("Duplicate resource: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Duplicate resource");
+        return problemDetail;
+    }
+
     /*@ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         log.warn("Access denied: {}", ex.getMessage());

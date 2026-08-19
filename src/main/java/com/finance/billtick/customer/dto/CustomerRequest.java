@@ -24,6 +24,7 @@ public class CustomerRequest {
 
     @NotBlank(message = "Phone is required")
     @Size(min = 10, message = "Phone must be at least 10 characters")
+    @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone must be 10 to 15 digits")
     private String phone;
 
     @NotBlank(message = "City is required")
@@ -41,17 +42,27 @@ public class CustomerRequest {
     @NotNull(message = "TaxExempt is required")
     private Boolean taxExempt;
 
-    @NotBlank(message = "ExemptionType is required")
+
     @Size(min = 2, message = "ExemptionType must be at least 2 characters")
     private String exemptionType;
 
-    @NotBlank(message = "CertificateNumber is required")
+
     @Size(min = 2, message = "CertificateNumber must be at least 2 characters")
     private String certificateNumber;
 
-    @NotNull(message = "ExemptionExpiryDate is required")
+
     private LocalDate exemptionExpiryDate;
 
     @NotNull(message = "BusinessId is required")
     private Long businessId;
+
+    @AssertTrue(message = "ExemptionType, CertificateNumber and ExemptionExpiryDate are required when TaxExempt is true")
+    public boolean isExemptionDetailsValid() {
+        if (taxExempt == null || !taxExempt) {
+            return true;
+        }
+        return exemptionType != null && !exemptionType.isBlank()
+                && certificateNumber != null && !certificateNumber.isBlank()
+                && exemptionExpiryDate != null;
+    }
 }

@@ -28,6 +28,11 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
+        return ResponseEntity.ok(customerService.getCustomerById(id));
+    }
+
     @PutMapping(value = "/{id}")
     public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequest customerRequest) {
         return ResponseEntity.ok(customerService.updateCustomer(id, customerRequest));
@@ -38,8 +43,8 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.patchCustomer(id, customerPatchRequest));
     }
 
-    @DeleteMapping()
-    public ResponseEntity<?> deleteCustomer(@RequestParam Long id) {
+    @DeleteMapping(value = "/{id}")
+    public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

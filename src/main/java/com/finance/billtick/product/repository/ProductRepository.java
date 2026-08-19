@@ -11,4 +11,8 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByBusiness(Business business);
+
+    boolean existsByBusinessAndProductCode(Business business, String productCode);
+
+    boolean existsByBusinessAndProductCodeAndIdNot(Business business, String productCode, Long id);
 }
