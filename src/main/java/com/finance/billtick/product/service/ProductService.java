@@ -29,7 +29,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final BusinessRepository businessRepository;
     private final CustomerRepository customerRepository;
-    private final InvoiceRepository invoiceRepository;
+//    private final InvoiceRepository invoiceRepository;
     private final ProductMapper productMapper;
 
     @Transactional
@@ -79,10 +79,11 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         Product product = assertProduct(id);
-        if (invoiceRepository.existsByProduct(product)) {
-            throw new ResourceInUseException("Product with id: " + id
-                    + " cannot be deleted because one or more invoices reference it");
-        }
+
+//        if (invoiceRepository.existsByProduct(product)) {
+//            throw new ResourceInUseException("Product with id: " + id
+//                    + " cannot be deleted because one or more invoices reference it");
+//        }
         productRepository.delete(product);
     }
 

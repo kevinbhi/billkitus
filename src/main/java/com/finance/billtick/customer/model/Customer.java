@@ -36,7 +36,7 @@ public class Customer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id")
-    @JsonIgnore // check point
+    @JsonIgnore
     private Business business;
 
     @OneToMany(mappedBy = "customer")

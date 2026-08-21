@@ -33,15 +33,15 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getInvoiceById(id));
     }
 
-    @PutMapping(value = "/{id}")
-    public ResponseEntity<InvoiceResponse> updateInvoice(@PathVariable Long id, @Valid @RequestBody InvoiceRequest invoiceRequest) {
-        return ResponseEntity.ok(invoiceService.updateInvoice(id, invoiceRequest));
-    }
-
-    @PatchMapping(value = "/{id}")
-    public ResponseEntity<InvoiceResponse> patchInvoice(@PathVariable Long id, @Valid @RequestBody InvoicePatchRequest invoicePatchRequest) {
-        return ResponseEntity.ok(invoiceService.patchInvoice(id, invoicePatchRequest));
-    }
+//    @PutMapping(value = "/{id}")
+//    public ResponseEntity<InvoiceResponse> updateInvoice(@PathVariable Long id, @Valid @RequestBody InvoiceRequest invoiceRequest) {
+//        return ResponseEntity.ok(invoiceService.updateInvoice(id, invoiceRequest));
+//    }
+//
+//    @PatchMapping(value = "/{id}")
+//    public ResponseEntity<InvoiceResponse> patchInvoice(@PathVariable Long id, @Valid @RequestBody InvoicePatchRequest invoicePatchRequest) {
+//        return ResponseEntity.ok(invoiceService.patchInvoice(id, invoicePatchRequest));
+//    }
 
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> deleteInvoice(@PathVariable Long id) {
@@ -59,13 +59,7 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getAllInvoicesForCustomer(customerId));
     }
 
-    @GetMapping("/product")
-    public ResponseEntity<List<InvoiceResponse>> getAllInvoicesForProduct(@RequestParam Long productId) {
-        return ResponseEntity.ok(invoiceService.getAllInvoicesForProduct(productId));
-    }
 
-    @GetMapping("/parent")
-    public ResponseEntity<List<InvoiceResponse>> getAllChildInvoices(@RequestParam Long parentInvoiceId) {
-        return ResponseEntity.ok(invoiceService.getAllChildInvoices(parentInvoiceId));
-    }
+
+
 }

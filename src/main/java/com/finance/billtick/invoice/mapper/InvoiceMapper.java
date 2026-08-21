@@ -25,15 +25,12 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
-    @Mapping(target = "product", ignore = true)
-    @Mapping(target = "parentInvoice", ignore = true)
-    @Mapping(target = "childInvoices", ignore = true)
+
     Invoice toInvoice(InvoiceRequest invoiceRequest);
 
     @Mapping(source = "business.id", target = "businessId")
     @Mapping(source = "customer.id", target = "customerId")
-    @Mapping(source = "product.id", target = "productId")
-    @Mapping(source = "parentInvoice.id", target = "parentInvoiceId")
+
     InvoiceResponse toInvoiceResponse(Invoice invoice);
 
     List<InvoiceResponse> toInvoiceResponseList(List<Invoice> invoices);
@@ -44,9 +41,8 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
-    @Mapping(target = "product", ignore = true)
-    @Mapping(target = "parentInvoice", ignore = true)
-    @Mapping(target = "childInvoices", ignore = true)
+
+
     void updateInvoice(InvoiceRequest invoiceRequest, @MappingTarget Invoice invoice);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -56,14 +52,13 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
-    @Mapping(target = "product", ignore = true)
-    @Mapping(target = "parentInvoice", ignore = true)
-    @Mapping(target = "childInvoices", ignore = true)
+
     void patchInvoice(InvoicePatchRequest invoiceRequest, @MappingTarget Invoice invoice);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "invoice", ignore = true)
     @Mapping(target = "product", ignore = true)
+    @Mapping(target = "unitPrice", ignore = true)
     @Mapping(target = "lineTotal", ignore = true)
     @Mapping(target = "lineTax", ignore = true)
     InvoiceItem toInvoiceItem(InvoiceItemRequest invoiceItemRequest);

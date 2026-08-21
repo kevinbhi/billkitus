@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_number", columnNames = {"invoice_number"}))
+@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_business", columnNames = {"invoice_number","business_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -62,19 +62,8 @@ public class Invoice {
     @JsonIgnore
     private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    @JsonIgnore
-    private Product product;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_invoice_id") // check point
-    @JsonIgnore // check point
-    private Invoice parentInvoice;
-
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceItem> items = new ArrayList<>();
 
-    @OneToMany(mappedBy = "parentInvoice")
-    private List<Invoice> childInvoices = new ArrayList<>();
+
 }

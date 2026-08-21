@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.invoice.model.Invoice;
+import com.finance.billtick.invoice.model.InvoiceItem;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,14 +31,14 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id")
-    @JsonIgnore // check point
+    @JsonIgnore
     private Business business;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
-    @JsonIgnore  // check point
+    @JsonIgnore
     private Customer customer;
 
     @OneToMany(mappedBy = "product")
-    private List<Invoice> invoices = new ArrayList<>();
+    private List<InvoiceItem> invoiceItems = new ArrayList<>();
 }

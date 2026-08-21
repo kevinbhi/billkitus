@@ -9,10 +9,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByBusiness(Business business);
+
+    // Latest invoice for a business whose number starts with "PREFIX-YEAR-".
+    // Fixed-width zero padding makes lexical desc == numeric desc.
+    Optional<Invoice> findFirstByBusinessAndInvoiceNumberStartingWithOrderByInvoiceNumberDesc(
+            Business business, String invoiceNumberPrefix);
 
     List<Invoice> findByCustomer(Customer customer);
 
@@ -20,11 +26,5 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     boolean existsByInvoiceNumberAndIdNot(String invoiceNumber, Long id);
 
-    List<Invoice> findByProduct(Product product);
 
-    boolean existsByProduct(Product product);
-
-    List<Invoice> findByParentInvoice(Invoice parentInvoice);
-
-    boolean existsByParentInvoice(Invoice parentInvoice);
 }
