@@ -54,6 +54,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProductsForBusiness(businessId));
     }
 
+    @GetMapping("/customer")
+    public ResponseEntity<List<ProductResponse>> getAllProductsForCustomer(@RequestParam Long customerId) {
+        return ResponseEntity.ok(productService.getAllProductsForCustomer(customerId));
+    }
+
 
 
 }

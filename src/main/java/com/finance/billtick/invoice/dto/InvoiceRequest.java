@@ -38,6 +38,10 @@ public class InvoiceRequest {
     @NotNull(message = "CustomerId is required")
     private Long customerId;
 
+    private Long productId;
+
+    private Long parentInvoiceId;
+
     @NotEmpty(message = "Items must contain at least one line item")
     @Valid
     private List<InvoiceItemRequest> items;

@@ -4,6 +4,7 @@ package com.finance.billtick.invoice.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.customer.model.Customer;
+import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -61,6 +62,19 @@ public class Invoice {
     @JsonIgnore
     private Customer customer;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    @JsonIgnore
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_invoice_id") // check point
+    @JsonIgnore // check point
+    private Invoice parentInvoice;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InvoiceItem> items = new ArrayList<>();
+
+    @OneToMany(mappedBy = "parentInvoice")
+    private List<Invoice> childInvoices = new ArrayList<>();
 }

@@ -2,9 +2,14 @@ package com.finance.billtick.product.service;
 
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.business.repository.BusinessRepository;
+import com.finance.billtick.customer.model.Customer;
+import com.finance.billtick.customer.repository.CustomerRepository;
 import com.finance.billtick.exception.DuplicateResourceException;
 import com.finance.billtick.exception.InvalidPricingException;
+import com.finance.billtick.exception.InvalidRelationException;
+import com.finance.billtick.exception.ResourceInUseException;
 import com.finance.billtick.exception.ResourceNotFoundException;
+import com.finance.billtick.invoice.repository.InvoiceRepository;
 import com.finance.billtick.product.dto.ProductPatchRequest;
 import com.finance.billtick.product.dto.ProductRequest;
 import com.finance.billtick.product.dto.ProductResponse;
@@ -23,6 +28,8 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final BusinessRepository businessRepository;
+    private final CustomerRepository customerRepository;
+    private final InvoiceRepository invoiceRepository;
     private final ProductMapper productMapper;
 
     @Transactional
@@ -31,6 +38,7 @@ public class ProductService {
         product.setBusiness(assertBusiness(productRequest.getBusinessId()));
         assertUniqueProductCode(product.getBusiness(), product.getProductCode(), null);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
+        applyCustomer(product, productRequest.getCustomerId());
         return productMapper.toProductResponse(productRepository.save(product));
     }
 
@@ -52,6 +60,7 @@ public class ProductService {
         productMapper.updateProduct(productRequest, product);
         product.setBusiness(business);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
+        applyCustomer(product, productRequest.getCustomerId());
         return productMapper.toProductResponse(productRepository.save(product));
     }
 
@@ -61,12 +70,19 @@ public class ProductService {
         assertUniqueProductCode(product.getBusiness(), productPatchRequest.getProductCode(), id);
         productMapper.patchProduct(productPatchRequest, product);
         assertPricing(product.getPurchasePrice(), product.getSellingPrice());
+        if (productPatchRequest.getCustomerId() != null) {
+            applyCustomer(product, productPatchRequest.getCustomerId());
+        }
         return productMapper.toProductResponse(productRepository.save(product));
     }
 
     @Transactional
     public void deleteProduct(Long id) {
         Product product = assertProduct(id);
+        if (invoiceRepository.existsByProduct(product)) {
+            throw new ResourceInUseException("Product with id: " + id
+                    + " cannot be deleted because one or more invoices reference it");
+        }
         productRepository.delete(product);
     }
 
@@ -78,6 +94,28 @@ public class ProductService {
     private Business assertBusiness(Long businessId) {
         return businessRepository.findById(businessId)
                 .orElseThrow(() -> new ResourceNotFoundException("Business not found with id: " + businessId));
+    }
+
+    private Customer assertCustomer(Long customerId) {
+        return customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id: " + customerId));
+    }
+
+    private void applyCustomer(Product product, Long customerId) {
+        if (customerId == null) {
+            product.setCustomer(null);
+            return;
+        }
+        Customer customer = assertCustomer(customerId);
+        assertCustomerBelongsToBusiness(product.getBusiness(), customer);
+        product.setCustomer(customer);
+    }
+
+    private void assertCustomerBelongsToBusiness(Business business, Customer customer) {
+        if (customer.getBusiness() == null || !customer.getBusiness().getId().equals(business.getId())) {
+            throw new InvalidRelationException("Customer with id: " + customer.getId()
+                    + " does not belong to business with id: " + business.getId());
+        }
     }
 
     private void assertPricing(BigDecimal purchasePrice, BigDecimal sellingPrice) {
@@ -100,5 +138,10 @@ public class ProductService {
 
     public List<ProductResponse> getAllProductsForBusiness(Long businessId) {
         return productMapper.toProductResponseList(productRepository.findByBusiness(assertBusiness(businessId)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllProductsForCustomer(Long customerId) {
+        return productMapper.toProductResponseList(productRepository.findByCustomer(assertCustomer(customerId)));
     }
 }

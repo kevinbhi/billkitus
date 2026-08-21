@@ -4,6 +4,7 @@ package com.finance.billtick.invoice.repository;
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.invoice.model.Invoice;
+import com.finance.billtick.product.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +19,12 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     boolean existsByInvoiceNumber(String invoiceNumber);
 
     boolean existsByInvoiceNumberAndIdNot(String invoiceNumber, Long id);
+
+    List<Invoice> findByProduct(Product product);
+
+    boolean existsByProduct(Product product);
+
+    List<Invoice> findByParentInvoice(Invoice parentInvoice);
+
+    boolean existsByParentInvoice(Invoice parentInvoice);
 }

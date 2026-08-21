@@ -17,6 +17,7 @@ import java.util.List;
 public interface CustomerMapper {
 
     @Mapping(target = "business", ignore = true)
+    @Mapping(target = "products", ignore = true)
     Customer toCustomer(CustomerRequest customerRequest);
 
     @Mapping(source = "business.id", target = "businessId")
@@ -25,9 +26,11 @@ public interface CustomerMapper {
     List<CustomerResponse> toCustomerResponseList(List<Customer> customers);
 
     @Mapping(target = "business", ignore = true)
+    @Mapping(target = "products", ignore = true)
     void updateCustomer(CustomerRequest customerRequest, @MappingTarget Customer customer);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "business", ignore = true)
+    @Mapping(target = "products", ignore = true)
     void patchCustomer(CustomerPatchRequest customerRequest, @MappingTarget Customer customer);
 }

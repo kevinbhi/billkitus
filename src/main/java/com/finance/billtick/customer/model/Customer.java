@@ -3,10 +3,13 @@ package com.finance.billtick.customer.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.business.model.Business;
+import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "customer", uniqueConstraints = @UniqueConstraint(name = "customer_business_code", columnNames = {"business_id", "customer_code"}))
@@ -33,6 +36,9 @@ public class Customer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id")
-    @JsonIgnore
+    @JsonIgnore // check point
     private Business business;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Product> products = new ArrayList<>();
 }

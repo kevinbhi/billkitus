@@ -16,4 +16,5 @@ public class ProductResponse {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
     private Long businessId;
+    private Long customerId;
 }

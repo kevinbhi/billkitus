@@ -6,6 +6,7 @@ import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.customer.repository.CustomerRepository;
 import com.finance.billtick.exception.DuplicateResourceException;
 import com.finance.billtick.exception.InvalidInvoiceStateException;
+import com.finance.billtick.exception.ResourceInUseException;
 import com.finance.billtick.exception.ResourceNotFoundException;
 import com.finance.billtick.invoice.dto.InvoiceItemRequest;
 import com.finance.billtick.invoice.dto.InvoicePatchRequest;
@@ -48,6 +49,8 @@ public class InvoiceService {
         assertUniqueInvoiceNumber(invoice.getInvoiceNumber(), null);
         invoice.setBusiness(business);
         invoice.setCustomer(customer);
+        applyProduct(invoice, invoiceRequest.getProductId());
+        applyParentInvoice(invoice, invoiceRequest.getParentInvoiceId());
         applyItems(invoice, invoiceRequest.getItems());
         applyTotals(invoice);
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
@@ -74,6 +77,8 @@ public class InvoiceService {
         invoiceMapper.updateInvoice(invoiceRequest, invoice);
         invoice.setBusiness(business);
         invoice.setCustomer(customer);
+        applyProduct(invoice, invoiceRequest.getProductId());
+        applyParentInvoice(invoice, invoiceRequest.getParentInvoiceId());
         applyItems(invoice, invoiceRequest.getItems());
         applyTotals(invoice);
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
@@ -90,6 +95,12 @@ public class InvoiceService {
         if (invoicePatchRequest.getItems() != null) {
             applyItems(invoice, invoicePatchRequest.getItems());
         }
+        if (invoicePatchRequest.getProductId() != null) {
+            applyProduct(invoice, invoicePatchRequest.getProductId());
+        }
+        if (invoicePatchRequest.getParentInvoiceId() != null) {
+            applyParentInvoice(invoice, invoicePatchRequest.getParentInvoiceId());
+        }
         assertDueDate(invoice);
         applyTotals(invoice);
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
@@ -99,6 +110,10 @@ public class InvoiceService {
     public void deleteInvoice(Long id) {
         Invoice invoice = assertInvoice(id);
         assertMutable(invoice);
+        if (invoiceRepository.existsByParentInvoice(invoice)) {
+            throw new ResourceInUseException("Invoice with id: " + id
+                    + " cannot be deleted because one or more invoices reference it as their parent");
+        }
         invoiceRepository.delete(invoice);
     }
 
@@ -166,7 +181,42 @@ public class InvoiceService {
                 && invoicePatchRequest.getIssueDate() == null
                 && invoicePatchRequest.getDueDate() == null
                 && invoicePatchRequest.getTaxRate() == null
+                && invoicePatchRequest.getProductId() == null
+                && invoicePatchRequest.getParentInvoiceId() == null
                 && invoicePatchRequest.getItems() == null;
+    }
+
+    private void applyProduct(Invoice invoice, Long productId) {
+        if (productId == null) {
+            invoice.setProduct(null);
+            return;
+        }
+        Product product = assertProduct(productId);
+        assertProductBelongsToBusiness(invoice.getBusiness(), product);
+        invoice.setProduct(product);
+    }
+
+    private void applyParentInvoice(Invoice invoice, Long parentInvoiceId) {
+        if (parentInvoiceId == null) {
+            invoice.setParentInvoice(null);
+            return;
+        }
+        if (parentInvoiceId.equals(invoice.getId())) {
+            throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
+                    + " cannot be its own parent invoice");
+        }
+        Invoice parentInvoice = assertInvoice(parentInvoiceId);
+        assertSameBusiness(invoice, parentInvoice);
+        invoice.setParentInvoice(parentInvoice);
+    }
+
+    private void assertSameBusiness(Invoice invoice, Invoice parentInvoice) {
+        if (parentInvoice.getBusiness() == null || invoice.getBusiness() == null
+                || !parentInvoice.getBusiness().getId().equals(invoice.getBusiness().getId())) {
+            throw new InvalidInvoiceStateException("Parent invoice with id: " + parentInvoice.getId()
+                    + " does not belong to business with id: "
+                    + (invoice.getBusiness() == null ? null : invoice.getBusiness().getId()));
+        }
     }
 
     private void applyItems(Invoice invoice, List<InvoiceItemRequest> itemRequests) {
@@ -215,5 +265,15 @@ public class InvoiceService {
     @Transactional(readOnly = true)
     public List<InvoiceResponse> getAllInvoicesForCustomer(Long customerId) {
         return invoiceMapper.toInvoiceResponseList(invoiceRepository.findByCustomer(assertCustomer(customerId)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getAllInvoicesForProduct(Long productId) {
+        return invoiceMapper.toInvoiceResponseList(invoiceRepository.findByProduct(assertProduct(productId)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getAllChildInvoices(Long parentInvoiceId) {
+        return invoiceMapper.toInvoiceResponseList(invoiceRepository.findByParentInvoice(assertInvoice(parentInvoiceId)));
     }
 }

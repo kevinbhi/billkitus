@@ -9,7 +9,9 @@ import com.finance.billtick.customer.mapper.CustomerMapper;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.customer.repository.CustomerRepository;
 import com.finance.billtick.exception.DuplicateResourceException;
+import com.finance.billtick.exception.ResourceInUseException;
 import com.finance.billtick.exception.ResourceNotFoundException;
+import com.finance.billtick.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final BusinessRepository businessRepository;
+    private final ProductRepository productRepository;
     private final CustomerMapper customerMapper;
 
     @Transactional
@@ -62,6 +65,10 @@ public class CustomerService {
     @Transactional
     public void deleteCustomer(Long id) {
         Customer customer = assertCustomer(id);
+        if (productRepository.existsByCustomer(customer)) {
+            throw new ResourceInUseException("Customer with id: " + id
+                    + " cannot be deleted because one or more products reference it");
+        }
         customerRepository.delete(customer);
     }
 

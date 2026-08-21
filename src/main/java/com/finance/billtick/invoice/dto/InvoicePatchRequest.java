@@ -30,6 +30,10 @@ public class InvoicePatchRequest {
     @Digits(integer = 10, fraction = 2, message = "TaxRate must have at most 2 decimal places")
     private BigDecimal taxRate;
 
+    private Long productId;
+
+    private Long parentInvoiceId;
+
     @Valid
     private List<InvoiceItemRequest> items;
 

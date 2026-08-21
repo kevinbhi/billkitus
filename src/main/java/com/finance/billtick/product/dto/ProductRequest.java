@@ -34,4 +34,6 @@ public class ProductRequest {
 
     @NotNull(message = "BusinessId is required")
     private Long businessId;
+
+    private Long customerId;
 }

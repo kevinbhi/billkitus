@@ -27,6 +27,6 @@ public class Business {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    @JsonIgnore
+    @JsonIgnore // check point
     private User user;
 }

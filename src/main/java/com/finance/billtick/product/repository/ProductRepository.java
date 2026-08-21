@@ -2,6 +2,7 @@ package com.finance.billtick.product.repository;
 
 
 import com.finance.billtick.business.model.Business;
+import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.product.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByBusinessAndProductCode(Business business, String productCode);
 
     boolean existsByBusinessAndProductCodeAndIdNot(Business business, String productCode, Long id);
+
+    List<Product> findByCustomer(Customer customer);
+
+    boolean existsByCustomer(Customer customer);
 }

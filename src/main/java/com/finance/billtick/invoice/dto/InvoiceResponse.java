@@ -23,5 +23,7 @@ public class InvoiceResponse {
     private BigDecimal total;
     private Long businessId;
     private Long customerId;
+    private Long productId;
+    private Long parentInvoiceId;
     private List<InvoiceItemResponse> items;
 }

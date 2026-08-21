@@ -28,4 +28,6 @@ public class ProductPatchRequest {
     @PositiveOrZero(message = "SellingPrice must be zero or positive")
     @Digits(integer = 10, fraction = 2, message = "SellingPrice must have at most 2 decimal places")
     private BigDecimal sellingPrice;
+
+    private Long customerId;
 }

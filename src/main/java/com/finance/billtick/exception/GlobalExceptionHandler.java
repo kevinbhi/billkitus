@@ -2,6 +2,7 @@ package com.finance.billtick.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +44,39 @@ public class GlobalExceptionHandler {
         log.warn("Invalid pricing: {}", ex.getMessage());
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setTitle("Invalid pricing");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidInvoiceStateException.class)
+    public ProblemDetail handleInvalidInvoiceState(InvalidInvoiceStateException ex, HttpServletRequest request) {
+        log.warn("Invalid invoice state: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid invoice state");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidRelationException.class)
+    public ProblemDetail handleInvalidRelation(InvalidRelationException ex, HttpServletRequest request) {
+        log.warn("Invalid relation: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Invalid relation");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ResourceInUseException.class)
+    public ProblemDetail handleResourceInUse(ResourceInUseException ex, HttpServletRequest request) {
+        log.warn("Resource in use: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Resource in use");
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Operation rejected because other records reference this resource");
+        problemDetail.setTitle("Data integrity violation");
         return problemDetail;
     }
 

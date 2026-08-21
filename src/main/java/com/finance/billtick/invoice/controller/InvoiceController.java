@@ -58,4 +58,14 @@ public class InvoiceController {
     public ResponseEntity<List<InvoiceResponse>> getAllInvoicesForCustomer(@RequestParam Long customerId) {
         return ResponseEntity.ok(invoiceService.getAllInvoicesForCustomer(customerId));
     }
+
+    @GetMapping("/product")
+    public ResponseEntity<List<InvoiceResponse>> getAllInvoicesForProduct(@RequestParam Long productId) {
+        return ResponseEntity.ok(invoiceService.getAllInvoicesForProduct(productId));
+    }
+
+    @GetMapping("/parent")
+    public ResponseEntity<List<InvoiceResponse>> getAllChildInvoices(@RequestParam Long parentInvoiceId) {
+        return ResponseEntity.ok(invoiceService.getAllChildInvoices(parentInvoiceId));
+    }
 }
