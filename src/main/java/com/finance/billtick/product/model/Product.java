@@ -3,10 +3,12 @@ package com.finance.billtick.product.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.business.model.Business;
+import com.finance.billtick.invoice.model.InvoiceItem;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "product", uniqueConstraints = @UniqueConstraint(name = "uk_product_business_code", columnNames = {"business_id", "product_code"}))
@@ -28,4 +30,7 @@ public class Product {
     @JoinColumn(name = "business_id")
     @JsonIgnore
     private Business business;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<InvoiceItem> invoiceItems;
 }

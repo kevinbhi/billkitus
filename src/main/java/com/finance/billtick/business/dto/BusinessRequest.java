@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class BusinessRequest {
@@ -34,7 +36,8 @@ public class BusinessRequest {
 
     @NotNull(message = "SalesTaxRate is required")
     @PositiveOrZero(message = "SalesTaxRate must be zero or positive")
-    private Long salesTaxRate;
+    @Digits(integer = 8, fraction = 2, message = "SalesTaxRate must have at most 2 decimal places")
+    private BigDecimal salesTaxRate;
 
     @NotBlank(message = "Logo is required")
     private String logo;

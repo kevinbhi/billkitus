@@ -46,6 +46,14 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(InvalidInvoiceStateException.class)
+    public ProblemDetail handleInvalidInvoiceState(InvalidInvoiceStateException ex, HttpServletRequest request) {
+        log.warn("Invalid invoice state: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problemDetail.setTitle("Invalid invoice state");
+        return problemDetail;
+    }
+
     @ExceptionHandler(DuplicateResourceException.class)
     public ProblemDetail handleDuplicateResource(DuplicateResourceException ex, HttpServletRequest request) {
         log.warn("Duplicate resource: {}", ex.getMessage());

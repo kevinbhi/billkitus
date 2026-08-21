@@ -6,6 +6,8 @@ import com.finance.billtick.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "business")
 @Getter
@@ -22,7 +24,10 @@ public class Business {
     private String zipCode;
     private String invoicePrefix;
     private String defaultTerms;
-    private long salesTaxRate;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal salesTaxRate;
+
     private String logo;
 
     @ManyToOne(fetch = FetchType.LAZY)

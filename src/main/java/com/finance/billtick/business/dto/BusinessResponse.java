@@ -3,6 +3,8 @@ package com.finance.billtick.business.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class BusinessResponse {
@@ -14,7 +16,7 @@ public class BusinessResponse {
     private String zipCode;
     private String invoicePrefix;
     private String defaultTerms;
-    private long salesTaxRate;
+    private BigDecimal salesTaxRate;
     private String logo;
     private Long userId;
 }

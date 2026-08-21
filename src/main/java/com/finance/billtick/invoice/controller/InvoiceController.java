@@ -1,6 +1,5 @@
 package com.finance.billtick.invoice.controller;
 
-import com.finance.billtick.invoice.dto.InvoicePatchRequest;
 import com.finance.billtick.invoice.dto.InvoiceRequest;
 import com.finance.billtick.invoice.dto.InvoiceResponse;
 import com.finance.billtick.invoice.service.InvoiceService;
@@ -31,22 +30,6 @@ public class InvoiceController {
     @GetMapping(value = "/{id}")
     public ResponseEntity<InvoiceResponse> getInvoiceById(@PathVariable Long id) {
         return ResponseEntity.ok(invoiceService.getInvoiceById(id));
-    }
-
-    @PutMapping(value = "/{id}")
-    public ResponseEntity<InvoiceResponse> updateInvoice(@PathVariable Long id, @Valid @RequestBody InvoiceRequest invoiceRequest) {
-        return ResponseEntity.ok(invoiceService.updateInvoice(id, invoiceRequest));
-    }
-
-    @PatchMapping(value = "/{id}")
-    public ResponseEntity<InvoiceResponse> patchInvoice(@PathVariable Long id, @Valid @RequestBody InvoicePatchRequest invoicePatchRequest) {
-        return ResponseEntity.ok(invoiceService.patchInvoice(id, invoicePatchRequest));
-    }
-
-    @DeleteMapping(value = "/{id}")
-    public ResponseEntity<?> deleteInvoice(@PathVariable Long id) {
-        invoiceService.deleteInvoice(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping("/business")

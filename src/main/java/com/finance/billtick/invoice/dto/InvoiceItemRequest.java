@@ -2,12 +2,14 @@ package com.finance.billtick.invoice.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class InvoiceItemRequest {
 
     @NotBlank(message = "Description is required")
@@ -19,7 +21,8 @@ public class InvoiceItemRequest {
     @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 2 decimal places")
     private BigDecimal quantity;
 
-    @NotNull(message = "UnitPrice is required")
+    // Optional fallback. The server uses product.sellingPrice; this is used
+    // only when the selected product has no selling price of its own.
     @PositiveOrZero(message = "UnitPrice must be zero or positive")
     @Digits(integer = 15, fraction = 2, message = "UnitPrice must have at most 2 decimal places")
     private BigDecimal unitPrice;
@@ -27,5 +30,6 @@ public class InvoiceItemRequest {
     @NotNull(message = "Taxable is required")
     private Boolean taxable;
 
+    @NotNull(message = "ProductId is required")
     private Long productId;
 }

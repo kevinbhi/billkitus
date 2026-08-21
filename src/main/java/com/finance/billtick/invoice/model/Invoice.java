@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_number", columnNames = {"invoice_number"}))
+@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_business", columnNames = {"invoice_number", "business_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
