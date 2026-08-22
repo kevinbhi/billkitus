@@ -52,7 +52,8 @@ public class BusinessService {
     @Transactional
     public void deleteBusiness(Long id) {
         Business business = assertBusiness(id);
-        businessRepository.delete(business);
+        business.setActive(false);
+        businessRepository.save(business);
     }
 
     private Business assertBusiness(Long id) {

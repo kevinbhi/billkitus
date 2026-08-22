@@ -4,19 +4,22 @@ package com.finance.billtick.business.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.product.model.Product;
+import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
 @Table(name = "business")
+@SQLRestriction("is_active = 1")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Business {
+public class Business extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,14 +34,17 @@ public class Business {
     private BigDecimal salesTaxRate;
     private String logo;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
 
-    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "business")
     private List<Customer> customers;
 
-    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "business")
     private List<Product> products;
 }

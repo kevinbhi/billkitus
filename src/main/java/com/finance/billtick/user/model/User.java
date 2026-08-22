@@ -2,17 +2,20 @@ package com.finance.billtick.user.model;
 
 
 import com.finance.billtick.business.model.Business;
+import com.finance.billtick.common.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@SQLRestriction("is_active = 1")
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +26,9 @@ public class User {
     private String lastName;
     private String phone;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
+    @OneToMany(mappedBy = "user")
     private List<Business> business;
 }

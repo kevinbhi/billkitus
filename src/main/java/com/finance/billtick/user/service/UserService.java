@@ -48,7 +48,8 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id) {
         User user = assertUser(id);
-        userRepository.delete(user);
+        user.setActive(false);
+        userRepository.save(user);
     }
 
     private User assertUser(Long id) {

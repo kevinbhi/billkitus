@@ -3,10 +3,12 @@ package com.finance.billtick.invoice.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.finance.billtick.business.model.Business;
+import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 import lombok.*;
 
@@ -17,10 +19,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_business", columnNames = {"invoice_number","business_id"}))
+@SQLRestriction("is_active = 1")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Invoice {
+public class Invoice extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,7 +65,10 @@ public class Invoice {
     @JsonIgnore
     private Customer customer;
 
-    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
+    @OneToMany(mappedBy = "invoice", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<InvoiceItem> items = new ArrayList<>();
 
 

@@ -69,7 +69,8 @@ public class CustomerService {
             throw new ResourceInUseException("Customer with id: " + id
                     + " cannot be deleted because one or more products reference it");
         }
-        customerRepository.delete(customer);
+        customer.setActive(false);
+        customerRepository.save(customer);
     }
 
     private Customer assertCustomer(Long id) {

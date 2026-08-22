@@ -84,7 +84,8 @@ public class ProductService {
 //            throw new ResourceInUseException("Product with id: " + id
 //                    + " cannot be deleted because one or more invoices reference it");
 //        }
-        productRepository.delete(product);
+        product.setActive(false);
+        productRepository.save(product);
     }
 
     private Product assertProduct(Long id) {

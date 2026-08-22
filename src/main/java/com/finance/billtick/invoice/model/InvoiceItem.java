@@ -2,11 +2,13 @@ package com.finance.billtick.invoice.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 import lombok.*;
 
@@ -14,10 +16,11 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "invoice_item")
+@SQLRestriction("is_active = 1")
 @Getter
 @Setter
 @NoArgsConstructor
-public class InvoiceItem {
+public class InvoiceItem extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +44,9 @@ public class InvoiceItem {
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal lineTax;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id", nullable = false)

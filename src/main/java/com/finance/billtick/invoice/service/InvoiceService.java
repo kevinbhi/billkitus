@@ -115,7 +115,8 @@ public class InvoiceService {
     public void deleteInvoice(Long id) {
         Invoice invoice = assertInvoice(id);
         assertMutable(invoice);
-        invoiceRepository.delete(invoice);
+        invoice.setActive(false);
+        invoiceRepository.save(invoice);
     }
 
     private Invoice assertInvoice(Long id) {
