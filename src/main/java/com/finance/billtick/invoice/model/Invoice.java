@@ -8,6 +8,7 @@ import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 import lombok.*;
@@ -65,6 +66,7 @@ public class Invoice extends BaseEntity {
     @JsonIgnore
     private Customer customer;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

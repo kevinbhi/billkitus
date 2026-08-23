@@ -5,6 +5,7 @@ import com.finance.billtick.business.model.Business;
 import com.finance.billtick.common.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class User extends BaseEntity {
     private String lastName;
     private String phone;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

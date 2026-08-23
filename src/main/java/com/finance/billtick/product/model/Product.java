@@ -9,6 +9,7 @@ import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.invoice.model.InvoiceItem;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
@@ -32,6 +33,7 @@ public class Product extends BaseEntity {
     private BigDecimal purchasePrice;
     private BigDecimal sellingPrice;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

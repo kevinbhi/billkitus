@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 import lombok.*;
@@ -45,6 +46,7 @@ public class InvoiceItem extends BaseEntity {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal lineTax;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

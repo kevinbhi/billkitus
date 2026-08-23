@@ -7,6 +7,7 @@ import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.product.model.Product;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ public class Customer extends BaseEntity {
     private String certificateNumber;
     private LocalDate exemptionExpiryDate;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 

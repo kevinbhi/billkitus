@@ -8,6 +8,7 @@ import com.finance.billtick.common.model.BaseEntity;
 import com.finance.billtick.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
@@ -34,6 +35,7 @@ public class Business extends BaseEntity {
     private BigDecimal salesTaxRate;
     private String logo;
 
+    @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
