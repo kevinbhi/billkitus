@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -68,6 +69,17 @@ public class GlobalExceptionHandler {
         log.warn("Resource in use: {}", ex.getMessage());
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setTitle("Resource in use");
+        return problemDetail;
+    }
+
+    // Raised by @Version on Invoice when two payments race. Without this the catch-all
+    // below would report a designed conflict as an opaque 500.
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticLocking(ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
+        log.warn("Concurrent modification: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "The record was modified by another request; retry the operation");
+        problemDetail.setTitle("Concurrent modification");
         return problemDetail;
     }
 

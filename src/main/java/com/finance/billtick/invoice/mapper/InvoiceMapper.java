@@ -25,6 +25,9 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
+    @Mapping(target = "balanceDue", ignore = true)
+    @Mapping(target = "paymentStatus", ignore = true)
+    @Mapping(target = "version", ignore = true)
 
     Invoice toInvoice(InvoiceRequest invoiceRequest);
 
@@ -41,6 +44,9 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
+    @Mapping(target = "balanceDue", ignore = true)
+    @Mapping(target = "paymentStatus", ignore = true)
+    @Mapping(target = "version", ignore = true)
 
 
     void updateInvoice(InvoiceRequest invoiceRequest, @MappingTarget Invoice invoice);
@@ -52,6 +58,9 @@ public interface InvoiceMapper {
     @Mapping(target = "subtotal", ignore = true)
     @Mapping(target = "taxAmount", ignore = true)
     @Mapping(target = "total", ignore = true)
+    @Mapping(target = "balanceDue", ignore = true)
+    @Mapping(target = "paymentStatus", ignore = true)
+    @Mapping(target = "version", ignore = true)
 
     void patchInvoice(InvoicePatchRequest invoiceRequest, @MappingTarget Invoice invoice);
 

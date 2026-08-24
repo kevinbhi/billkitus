@@ -4,10 +4,13 @@ package com.finance.billtick.invoice.repository;
 import com.finance.billtick.business.model.Business;
 import com.finance.billtick.customer.model.Customer;
 import com.finance.billtick.invoice.model.Invoice;
+import com.finance.billtick.invoice.model.InvoiceStatus;
+import com.finance.billtick.invoice.model.PaymentStatus;
 import com.finance.billtick.product.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,5 +29,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     boolean existsByInvoiceNumberAndIdNot(String invoiceNumber, Long id);
 
+    // Issued, not fully settled, and past due. Overdue is never stored, so it is expressed here.
+    List<Invoice> findByBusinessAndStatusAndPaymentStatusNotAndDueDateBefore(
+            Business business, InvoiceStatus status, PaymentStatus paymentStatus, LocalDate date);
 
 }

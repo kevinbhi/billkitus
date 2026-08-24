@@ -15,6 +15,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +57,24 @@ public class Invoice extends BaseEntity {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal total;
 
+    // Recomputed from total - sum(active payments) on every payment write, never decremented.
+    // The field initializer is required: @ColumnDefault only affects DDL, and Hibernate always
+    // includes the column in the INSERT.
+    @ColumnDefault("0")
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal balanceDue = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @ColumnDefault("'UNPAID'")
+    @Column(nullable = false, length = 50)
+    private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+
+    // Guards against two concurrent payments both reading the same balance and one being lost.
+    @Version
+    @ColumnDefault("0")
+    private long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id")
     @JsonIgnore
@@ -73,5 +92,22 @@ public class Invoice extends BaseEntity {
     @OneToMany(mappedBy = "invoice", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<InvoiceItem> items = new ArrayList<>();
 
+    // Derived, not persisted: the entity uses field access, so Hibernate ignores these getters.
+    // MapStruct still maps them onto InvoiceResponse by name.
+    public BigDecimal getAmountPaid() {
+        return balanceDue == null ? BigDecimal.ZERO : total.subtract(balanceDue);
+    }
+
+    // Overdue is a function of the clock, so it is computed on read rather than stored.
+    public boolean isOverdue() {
+        return status == InvoiceStatus.SENT
+                && paymentStatus != PaymentStatus.PAID
+                && dueDate.isBefore(LocalDate.now())
+                && balanceDue.signum() > 0;
+    }
+
+    public Long getDaysOverdue() {
+        return isOverdue() ? ChronoUnit.DAYS.between(dueDate, LocalDate.now()) : 0L;
+    }
 
 }

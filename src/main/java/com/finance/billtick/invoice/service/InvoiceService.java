@@ -17,7 +17,9 @@ import com.finance.billtick.invoice.mapper.InvoiceMapper;
 import com.finance.billtick.invoice.model.Invoice;
 import com.finance.billtick.invoice.model.InvoiceItem;
 import com.finance.billtick.invoice.model.InvoiceStatus;
+import com.finance.billtick.invoice.model.PaymentStatus;
 import com.finance.billtick.invoice.repository.InvoiceRepository;
+import com.finance.billtick.payment.repository.InvoicePaymentRepository;
 import com.finance.billtick.product.model.Product;
 import com.finance.billtick.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ public class InvoiceService {
     private final BusinessRepository businessRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final InvoicePaymentRepository invoicePaymentRepository;
     private final InvoiceMapper invoiceMapper;
 
     @Transactional
@@ -65,6 +68,10 @@ public class InvoiceService {
 
         applyCreateItems(invoice, invoiceRequest.getItems());
         applyTotals(invoice, isCustomerExempt(customer, issueDate));
+        // Set here rather than inside applyTotals: that method is also called from the update
+        // paths, where resetting the balance to the total would wipe recorded payments.
+        invoice.setBalanceDue(invoice.getTotal());
+        invoice.setPaymentStatus(PaymentStatus.UNPAID);
         return invoiceMapper.toInvoiceResponse(invoiceRepository.saveAndFlush(invoice));
     }
 
@@ -112,9 +119,33 @@ public class InvoiceService {
 //    }
 
     @Transactional
+    public InvoiceResponse sendInvoice(Long id) {
+        Invoice invoice = assertInvoice(id);
+        assertSendable(invoice);
+        invoice.setStatus(InvoiceStatus.SENT);
+        return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
+    }
+
+    @Transactional
+    public InvoiceResponse voidInvoice(Long id) {
+        Invoice invoice = assertInvoice(id);
+        assertVoidable(invoice);
+        invoice.setStatus(InvoiceStatus.VOID);
+        return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
+    }
+
+    @Transactional(readOnly = true)
+    public List<InvoiceResponse> getOverdueInvoicesForBusiness(Long businessId) {
+        return invoiceMapper.toInvoiceResponseList(
+                invoiceRepository.findByBusinessAndStatusAndPaymentStatusNotAndDueDateBefore(
+                        assertBusiness(businessId), InvoiceStatus.SENT, PaymentStatus.PAID, LocalDate.now()));
+    }
+
+    @Transactional
     public void deleteInvoice(Long id) {
         Invoice invoice = assertInvoice(id);
         assertMutable(invoice);
+        assertNoPayments(invoice);
         invoice.setActive(false);
         invoiceRepository.save(invoice);
     }
@@ -178,10 +209,43 @@ public class InvoiceService {
         }
     }
 
+    // Structural changes are confined to DRAFT: once an invoice is issued it is a document,
+    // and deleting one that payments already reference would orphan those rows.
     private void assertMutable(Invoice invoice) {
-        if (invoice.getStatus() == InvoiceStatus.PAID || invoice.getStatus() == InvoiceStatus.VOID) {
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
             throw new InvalidInvoiceStateException("Invoice with status " + invoice.getStatus()
                     + " cannot be modified or deleted");
+        }
+    }
+
+    // Backstop for assertMutable: soft-deleting an invoice that payment rows still point at
+    // would leave those rows unable to resolve their invoice through @SQLRestriction.
+    private void assertNoPayments(Invoice invoice) {
+        if (invoicePaymentRepository.existsByInvoice(invoice)) {
+            throw new ResourceInUseException("Invoice with id: " + invoice.getId()
+                    + " cannot be deleted because one or more payments reference it");
+        }
+    }
+
+    private void assertSendable(Invoice invoice) {
+        if (invoice.getStatus() != InvoiceStatus.DRAFT) {
+            throw new InvalidInvoiceStateException("Invoice with status " + invoice.getStatus()
+                    + " cannot be sent; only a DRAFT invoice can be sent");
+        }
+        if (invoice.getTotal().signum() <= 0) {
+            throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
+                    + " cannot be sent because its total is zero");
+        }
+    }
+
+    private void assertVoidable(Invoice invoice) {
+        if (invoice.getStatus() == InvoiceStatus.VOID) {
+            throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
+                    + " is already void");
+        }
+        if (invoice.getPaymentStatus() != PaymentStatus.UNPAID) {
+            throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
+                    + " cannot be voided because payments have been recorded against it");
         }
     }
 

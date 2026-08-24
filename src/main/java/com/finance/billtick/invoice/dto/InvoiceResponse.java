@@ -1,6 +1,7 @@
 package com.finance.billtick.invoice.dto;
 
 import com.finance.billtick.invoice.model.InvoiceStatus;
+import com.finance.billtick.invoice.model.PaymentStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,6 +22,11 @@ public class InvoiceResponse {
     private BigDecimal subtotal;
     private BigDecimal taxAmount;
     private BigDecimal total;
+    private PaymentStatus paymentStatus;
+    private BigDecimal amountPaid;
+    private BigDecimal balanceDue;
+    private boolean overdue;
+    private Long daysOverdue;
     private Long businessId;
     private Long customerId;
     private List<InvoiceItemResponse> items;

@@ -59,6 +59,23 @@ public class InvoiceController {
         return ResponseEntity.ok(invoiceService.getAllInvoicesForCustomer(customerId));
     }
 
+    @GetMapping("/overdue")
+    public ResponseEntity<List<InvoiceResponse>> getOverdueInvoicesForBusiness(@RequestParam Long businessId) {
+        return ResponseEntity.ok(invoiceService.getOverdueInvoicesForBusiness(businessId));
+    }
+
+    // Named action endpoints rather than a generic status PATCH, so illegal transitions
+    // cannot be requested at all.
+    @PostMapping(value = "/{id}/send")
+    public ResponseEntity<InvoiceResponse> sendInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.sendInvoice(id));
+    }
+
+    @PostMapping(value = "/{id}/void")
+    public ResponseEntity<InvoiceResponse> voidInvoice(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.voidInvoice(id));
+    }
+
 
 
 
