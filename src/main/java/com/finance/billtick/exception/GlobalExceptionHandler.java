@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -69,6 +70,18 @@ public class GlobalExceptionHandler {
         log.warn("Resource in use: {}", ex.getMessage());
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setTitle("Resource in use");
+        return problemDetail;
+    }
+
+    // Malformed JSON, or a value no longer in an enum (e.g. a client still sending the retired
+    // BANK_TRANSFER payment method). Without this the catch-all reports a plain client mistake
+    // as a 500. The cause message is deliberately not echoed -- it leaks internal type names.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadableMessage(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Unreadable request body: {}", ex.getMessage());
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Request body is malformed or contains an unsupported value");
+        problemDetail.setTitle("Malformed request");
         return problemDetail;
     }
 

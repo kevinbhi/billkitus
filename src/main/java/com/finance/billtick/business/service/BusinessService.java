@@ -66,6 +66,7 @@ public class BusinessService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
     }
 
+    @Transactional(readOnly = true)
     public List<BusinessResponse> getAllBusinessesForUser(Long userId) {
         return businessMapper.toBusinessResponseList(businessRepository.findByUser(assertUser(userId)));
     }

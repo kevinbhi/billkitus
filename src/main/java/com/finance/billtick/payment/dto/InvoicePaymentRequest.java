@@ -20,7 +20,7 @@ public class InvoicePaymentRequest {
     @Digits(integer = 15, fraction = 2, message = "Amount must have at most 2 decimal places")
     private BigDecimal amount;
 
-    // Optional: defaults to today, mirroring how issueDate is defaulted on an invoice.
+
     @PastOrPresent(message = "PaymentDate must not be in the future")
     private LocalDate paymentDate;
 
@@ -33,9 +33,10 @@ public class InvoicePaymentRequest {
     @Size(max = 500, message = "Notes must be at most 500 characters")
     private String notes;
 
-    @AssertTrue(message = "ReferenceNumber is required when Method is CHECK or BANK_TRANSFER")
+
+    @AssertTrue(message = "ReferenceNumber is required when Method is CHECK, ACH, WIRE or CREDIT_CARD")
     public boolean isReferenceNumberValid() {
-        if (method != PaymentMethod.CHECK && method != PaymentMethod.BANK_TRANSFER) {
+        if (method == null || !method.isReferenceRequired()) {
             return true;
         }
         return referenceNumber != null && !referenceNumber.isBlank();

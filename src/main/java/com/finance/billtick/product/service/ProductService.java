@@ -138,6 +138,7 @@ public class ProductService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllProductsForBusiness(Long businessId) {
         return productMapper.toProductResponseList(productRepository.findByBusiness(assertBusiness(businessId)));
     }

@@ -1,6 +1,7 @@
 package com.finance.billtick.business.dto;
 
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -29,6 +30,8 @@ public class BusinessPatchRequest {
     private String invoicePrefix;
 
     @Size(min = 2, message = "DefaultTerms must be at least 2 characters")
+    @Pattern(regexp = "(?i)^(due on receipt|cod|cia|([0-9]{1,2}/[0-9]{1,3}\\s+)?net\\s*[0-9]{1,3})$",
+            message = "DefaultTerms must be one of: Due on Receipt, COD, CIA, Net <days>, or a discount form such as 2/10 Net 30")
     private String defaultTerms;
 
     @PositiveOrZero(message = "SalesTaxRate must be zero or positive")

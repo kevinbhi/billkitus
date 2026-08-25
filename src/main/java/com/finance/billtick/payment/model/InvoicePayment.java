@@ -19,7 +19,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "invoice_payment")
+@Table(name = "invoice_payment",
+        indexes = {
+
+                @Index(name = "idx_payment_invoice_active_date",
+                        columnList = "invoice_id, is_active, payment_date DESC, id DESC"),
+                @Index(name = "idx_payment_business_active", columnList = "business_id, is_active"),
+                @Index(name = "idx_payment_customer_active", columnList = "customer_id, is_active")
+        })
 @SQLRestriction("is_active = 1")
 @Getter
 @Setter
@@ -58,8 +65,6 @@ public class InvoicePayment extends BaseEntity {
     @JsonIgnore
     private Invoice invoice;
 
-    // Snapshotted at record time, not re-derived through the invoice: a payment is a ledger
-    // entry, and reassigning an invoice's customer must not re-attribute historical payments.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id")
     @JsonIgnore

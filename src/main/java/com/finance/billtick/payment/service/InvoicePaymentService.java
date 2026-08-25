@@ -86,17 +86,12 @@ public class InvoicePaymentService {
         return invoicePaymentMapper.toInvoicePaymentResponseList(
                 invoicePaymentRepository.findByCustomer(assertCustomer(customerId)));
     }
-
-    // Reversal, not edit: the payment row stays in the table with its original timestamp and
-    // is_active = 0, and the balance is recomputed through the same path used on create.
-    // A second call finds nothing through @SQLRestriction and 404s, so this is idempotent.
     @Transactional
     public void deletePayment(Long id) {
         InvoicePayment payment = assertPayment(id);
         Invoice invoice = payment.getInvoice();
         assertReversible(invoice);
         payment.setActive(false);
-        // Flushed so the recompute below no longer sees the reversed row.
         invoicePaymentRepository.saveAndFlush(payment);
 
         applyInvoiceBalance(invoice);
@@ -138,8 +133,6 @@ public class InvoicePaymentService {
         }
     }
 
-    // Deliberately does not consult InvoiceService.assertMutable: reversing a payment on a
-    // fully-paid invoice is a legal transition, not an edit of a locked document.
     private void assertReversible(Invoice invoice) {
         if (invoice.getStatus() == InvoiceStatus.VOID) {
             throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
@@ -162,13 +155,9 @@ public class InvoicePaymentService {
         }
     }
 
-    // The single place balance and payment status are decided, so recording and reversing
-    // a payment cannot drift apart. Recomputed from the payment rows rather than adjusted,
-    // so any past drift self-repairs on the next write.
     private void applyInvoiceBalance(Invoice invoice) {
-        BigDecimal paid = invoicePaymentRepository.findByInvoiceOrderByPaymentDateDescIdDesc(invoice).stream()
-                .map(InvoicePayment::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
+        BigDecimal summed = invoicePaymentRepository.sumAmountByInvoice(invoice);
+        BigDecimal paid = (summed == null ? BigDecimal.ZERO : summed)
                 .setScale(AMOUNT_SCALE, RoundingMode.HALF_UP);
         invoice.setBalanceDue(invoice.getTotal().subtract(paid).setScale(AMOUNT_SCALE, RoundingMode.HALF_UP));
         invoice.setPaymentStatus(derivePaymentStatus(invoice.getTotal(), paid));

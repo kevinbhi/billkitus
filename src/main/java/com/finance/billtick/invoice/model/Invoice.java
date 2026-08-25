@@ -20,7 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "invoice", uniqueConstraints = @UniqueConstraint(name = "uk_invoice_business", columnNames = {"invoice_number","business_id"}))
+// To CHANGE an index, change its NAME and drop the old one by hand: ddl-auto: update matches
+// existing indexes by name only, so editing a columnList in place is silently ignored forever.
+@Table(name = "invoice",
+        uniqueConstraints = @UniqueConstraint(name = "uk_invoice_business", columnNames = {"invoice_number","business_id"}),
+        indexes = {
+                // findByBusiness, the dashboard aggregate and the overdue finder all lead with
+                // (business_id, is_active). uk_invoice_business cannot serve any of them -- it
+                // leads with invoice_number, so business_id is not a seekable prefix.
+                @Index(name = "idx_invoice_business_active_due", columnList = "business_id, is_active, due_date"),
+                @Index(name = "idx_invoice_customer_active", columnList = "customer_id, is_active")
+        })
 @SQLRestriction("is_active = 1")
 @Getter
 @Setter
@@ -47,6 +57,15 @@ public class Invoice extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal taxRate;
+
+    // USD is the only supported currency, but it is stored per-invoice rather than assumed
+    // globally: an invoice is a document of record, and a constant cannot be back-dated, so
+    // adding a second currency later would silently re-denominate every historical invoice.
+    // Deliberately a String, not an enum -- a string-mapped enum generates a CHECK constraint
+    // that ddl-auto: update can never alter afterwards.
+    @ColumnDefault("'USD'")
+    @Column(nullable = false, length = 3)
+    private String currency = "USD";
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal subtotal;

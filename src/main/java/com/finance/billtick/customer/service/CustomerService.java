@@ -95,6 +95,7 @@ public class CustomerService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<CustomerResponse> getAllCustomersForBusiness(Long businessId) {
         return customerMapper.toCustomerResponseList(customerRepository.findByBusiness(assertBusiness(businessId)));
     }

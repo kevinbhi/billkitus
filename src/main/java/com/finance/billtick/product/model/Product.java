@@ -17,7 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "product", uniqueConstraints = @UniqueConstraint(name = "uk_product_business_code", columnNames = {"business_id", "product_code"}))
+// No index on business_id: it is already the leading column of uk_product_business_code.
+@Table(name = "product",
+        uniqueConstraints = @UniqueConstraint(name = "uk_product_business_code", columnNames = {"business_id", "product_code"}),
+        indexes = @Index(name = "idx_product_customer_active", columnList = "customer_id, is_active"))
 @SQLRestriction("is_active = 1")
 @Getter
 @Setter

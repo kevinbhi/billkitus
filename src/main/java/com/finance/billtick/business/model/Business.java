@@ -15,7 +15,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "business")
+@Table(name = "business",
+        indexes = @Index(name = "idx_business_user_active", columnList = "user_id, is_active"))
 @SQLRestriction("is_active = 1")
 @Getter
 @Setter

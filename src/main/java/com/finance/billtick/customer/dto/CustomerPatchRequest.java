@@ -33,6 +33,8 @@ public class CustomerPatchRequest {
     private String state;
 
     @Size(min = 2, message = "PaymentTerms must be at least 2 characters")
+    @Pattern(regexp = "(?i)^(due on receipt|cod|cia|([0-9]{1,2}/[0-9]{1,3}\\s+)?net\\s*[0-9]{1,3})$",
+            message = "PaymentTerms must be one of: Due on Receipt, COD, CIA, Net <days>, or a discount form such as 2/10 Net 30")
     private String paymentTerms;
 
     private Boolean taxExempt;

@@ -18,6 +18,7 @@ public class InvoiceResponse {
     private LocalDate issueDate;
     private LocalDate dueDate;
     private InvoiceStatus status;
+    private String currency;
     private BigDecimal taxRate;
     private BigDecimal subtotal;
     private BigDecimal taxAmount;

@@ -30,6 +30,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +41,10 @@ public class InvoiceService {
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final int AMOUNT_SCALE = 2;
     private static final int SEQUENCE_WIDTH = 4;
-    private static final Pattern TERM_DAYS = Pattern.compile("([0-9]+)");
+    // Anchored on the literal "net" token so a discount prefix ("2/10 Net 30") cannot be
+    // mistaken for the term. {1,3} caps the value at 999 days, which is what makes both
+    // Integer.parseInt and LocalDate.plusDays total -- no guard needed.
+    private static final Pattern NET_TERM_DAYS = Pattern.compile("(?i)\\bnet\\s*([0-9]{1,3})\\b");
 
     private final InvoiceRepository invoiceRepository;
     private final BusinessRepository businessRepository;
@@ -302,12 +306,16 @@ public class InvoiceService {
         return issueDate.plusDays(parseTermDays(terms));
     }
 
-    // "Net 30" -> 30. Terms carrying no number (e.g. "Due on receipt") fall back to same-day.
+    // "Net 30" -> 30. "2/10 Net 30" -> 30 (the net term, not the discount rate). Terms with no
+    // net token ("Due on Receipt", "COD") fall back to same-day. Unrecognised input also falls
+    // back rather than throwing: this reads stored customer/business rows during invoice
+    // creation, and @Pattern never re-validates a row written by hand. The fallback is biased
+    // safe -- it makes the invoice due sooner, never later, so it cannot silently extend credit.
     private int parseTermDays(String terms) {
         if (terms == null) {
             return 0;
         }
-        Matcher matcher = TERM_DAYS.matcher(terms);
+        Matcher matcher = NET_TERM_DAYS.matcher(terms);
         return matcher.find() ? Integer.parseInt(matcher.group(1)) : 0;
     }
 
@@ -320,13 +328,21 @@ public class InvoiceService {
     }
 
     // PREFIX-YEAR-SEQ, where SEQ is (highest existing sequence for this business this year) + 1.
+    // The high-water mark deliberately includes soft-deleted invoices: an issued number is
+    // never reused, so deleting the latest invoice does not free its number for the next one.
     private String generateInvoiceNumber(Business business, int year) {
         String prefix = business.getInvoicePrefix() + "-" + year + "-";
-        long sequence = invoiceRepository
-                .findFirstByBusinessAndInvoiceNumberStartingWithOrderByInvoiceNumberDesc(business, prefix)
-                .map(latest -> parseSequence(latest.getInvoiceNumber(), prefix))
+        long sequence = Optional.ofNullable(
+                        invoiceRepository.findMaxInvoiceNumber(business.getId(), likePrefix(prefix)))
+                .map(latest -> parseSequence(latest, prefix))
                 .orElse(0L) + 1;
         return prefix + String.format("%0" + SEQUENCE_WIDTH + "d", sequence);
+    }
+
+    // invoicePrefix is user-supplied, and a hand-written native LIKE does not get the wildcard
+    // escaping Spring Data applies to a StartingWith derived query. Pairs with escape '\' there.
+    private String likePrefix(String prefix) {
+        return prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
 
     private long parseSequence(String invoiceNumber, String prefix) {
