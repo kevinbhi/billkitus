@@ -41,7 +41,8 @@ public class DashboardService {
 
         InvoiceTotals totals = invoiceRepository.aggregateTotals(business, today,
                 InvoiceStatus.DRAFT, InvoiceStatus.SENT, InvoiceStatus.VOID,
-                PaymentStatus.UNPAID, PaymentStatus.PARTIALLY_PAID, PaymentStatus.PAID);
+                PaymentStatus.UNPAID, PaymentStatus.PARTIAL, PaymentStatus.PAID,
+                PaymentStatus.OVERDUE);
 
         DashboardResponse response = new DashboardResponse();
         response.setBusinessId(businessId);

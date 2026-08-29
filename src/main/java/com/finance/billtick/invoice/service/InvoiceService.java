@@ -247,7 +247,10 @@ public class InvoiceService {
             throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
                     + " is already void");
         }
-        if (invoice.getPaymentStatus() != PaymentStatus.UNPAID) {
+        // Tests for money actually received rather than "anything other than UNPAID": OVERDUE
+        // is an unpaid invoice past its due date, and must stay voidable.
+        if (invoice.getPaymentStatus() == PaymentStatus.PARTIAL
+                || invoice.getPaymentStatus() == PaymentStatus.PAID) {
             throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
                     + " cannot be voided because payments have been recorded against it");
         }

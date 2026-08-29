@@ -37,6 +37,11 @@ public class InvoicePaymentController {
         return ResponseEntity.ok(invoicePaymentService.getPaymentsForInvoice(invoiceId));
     }
 
+    @GetMapping("/invoice/{invoiceId}")
+    public ResponseEntity<List<InvoicePaymentResponse>> getPaymentsForInvoicePath(@PathVariable Long invoiceId) {
+        return ResponseEntity.ok(invoicePaymentService.getPaymentsForInvoice(invoiceId));
+    }
+
     @GetMapping("/business")
     public ResponseEntity<List<InvoicePaymentResponse>> getPaymentsForBusiness(@RequestParam Long businessId) {
         return ResponseEntity.ok(invoicePaymentService.getPaymentsForBusiness(businessId));

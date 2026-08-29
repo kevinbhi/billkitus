@@ -62,6 +62,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     // all-null set returns 0 rather than null, which keeps the primitive long components safe.
     // The sums carry no else arm on purpose -- it avoids unifying BigDecimal with an integer
     // literal -- so they are null only when the business has zero invoices; scale() absorbs it.
+    // The unpaid bucket counts OVERDUE as well -- that is an unpaid invoice past its due date,
+    // so leaving it out would stop the three status counts summing to the invoice count.
     @Query("""
            select new com.finance.billtick.invoice.repository.InvoiceTotals(
              sum(case when i.status = :sent then i.total end),
@@ -74,7 +76,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
              count(case when i.status = :draft then 1 end),
              count(case when i.status = :sent then 1 end),
              count(case when i.status = :voided then 1 end),
-             count(case when i.paymentStatus = :unpaid then 1 end),
+             count(case when i.paymentStatus in (:unpaid, :overdue) then 1 end),
              count(case when i.paymentStatus = :partiallyPaid then 1 end),
              count(case when i.paymentStatus = :paid then 1 end))
            from Invoice i
@@ -87,7 +89,8 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
                                   @Param("voided") InvoiceStatus voided,
                                   @Param("unpaid") PaymentStatus unpaid,
                                   @Param("partiallyPaid") PaymentStatus partiallyPaid,
-                                  @Param("paid") PaymentStatus paid);
+                                  @Param("paid") PaymentStatus paid,
+                                  @Param("overdue") PaymentStatus overdue);
 
     // AR aging, one sum + one count per bucket in a single row. The day-offset comparison
     // inverts into four cut-off dates computed in Java, so this needs no function('datediff',..)

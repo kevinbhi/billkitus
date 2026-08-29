@@ -160,14 +160,22 @@ public class InvoicePaymentService {
         BigDecimal paid = (summed == null ? BigDecimal.ZERO : summed)
                 .setScale(AMOUNT_SCALE, RoundingMode.HALF_UP);
         invoice.setBalanceDue(invoice.getTotal().subtract(paid).setScale(AMOUNT_SCALE, RoundingMode.HALF_UP));
-        invoice.setPaymentStatus(derivePaymentStatus(invoice.getTotal(), paid));
+        invoice.setPaymentStatus(derivePaymentStatus(invoice, paid));
     }
 
-    private PaymentStatus derivePaymentStatus(BigDecimal total, BigDecimal paid) {
-        if (paid.signum() == 0) {
-            return PaymentStatus.UNPAID;
+    // Takes the invoice rather than just the total: distinguishing UNPAID from OVERDUE needs
+    // the due date and the document status, not only the money.
+    private PaymentStatus derivePaymentStatus(Invoice invoice, BigDecimal paid) {
+        if (paid.compareTo(invoice.getTotal()) >= 0) {
+            return PaymentStatus.PAID;
         }
-        return paid.compareTo(total) >= 0 ? PaymentStatus.PAID : PaymentStatus.PARTIALLY_PAID;
+        if (paid.signum() > 0) {
+            return PaymentStatus.PARTIAL;
+        }
+        return invoice.getStatus() == InvoiceStatus.SENT
+                && invoice.getDueDate().isBefore(LocalDate.now())
+                ? PaymentStatus.OVERDUE
+                : PaymentStatus.UNPAID;
     }
 
 }

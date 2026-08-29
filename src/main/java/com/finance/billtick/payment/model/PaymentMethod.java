@@ -1,10 +1,10 @@
 package com.finance.billtick.payment.model;
 public enum PaymentMethod {
     CASH(false),
-    CHECK(true),          // check number
-    ACH(true),            // NACHA trace number
-    WIRE(true),           // Fedwire reference / IMAD-OMAD
-    CREDIT_CARD(true),    // processor transaction id or auth code -- never a card number
+    CHECK(true),
+    ACH(true),
+    WIRE(true),
+    CREDIT_CARD(true),
     OTHER(false);
 
     private final boolean referenceRequired;
