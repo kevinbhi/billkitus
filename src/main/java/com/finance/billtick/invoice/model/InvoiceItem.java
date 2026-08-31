@@ -16,9 +16,6 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-// Join key for the invoice-list fetch AND the @OnDelete(CASCADE) FK. No index on product_id:
-// this is the most write-heavy table, nothing reads by product, and products are only ever
-// soft-deleted so the FK is never enforced against a real DELETE.
 @Table(name = "invoice_item",
         indexes = @Index(name = "idx_invoice_item_invoice_active", columnList = "invoice_id, is_active"))
 @SQLRestriction("is_active = 1")

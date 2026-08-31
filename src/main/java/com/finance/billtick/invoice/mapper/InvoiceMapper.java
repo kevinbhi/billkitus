@@ -5,6 +5,7 @@ import com.finance.billtick.invoice.dto.InvoiceItemResponse;
 import com.finance.billtick.invoice.dto.InvoicePatchRequest;
 import com.finance.billtick.invoice.dto.InvoiceRequest;
 import com.finance.billtick.invoice.dto.InvoiceResponse;
+import com.finance.billtick.invoice.dto.OverdueInvoiceResponse;
 import com.finance.billtick.invoice.model.Invoice;
 import com.finance.billtick.invoice.model.InvoiceItem;
 import org.mapstruct.BeanMapping;
@@ -38,6 +39,12 @@ public interface InvoiceMapper {
     InvoiceResponse toInvoiceResponse(Invoice invoice);
 
     List<InvoiceResponse> toInvoiceResponseList(List<Invoice> invoices);
+
+
+    @Mapping(source = "customer.customerName", target = "customerName")
+    OverdueInvoiceResponse toOverdueInvoiceResponse(Invoice invoice);
+
+    List<OverdueInvoiceResponse> toOverdueInvoiceResponseList(List<Invoice> invoices);
 
     @Mapping(target = "business", ignore = true)
     @Mapping(target = "customer", ignore = true)

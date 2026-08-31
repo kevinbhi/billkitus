@@ -40,7 +40,6 @@ public class InvoicePayment extends BaseEntity {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    // When the money actually moved. Distinct from BaseEntity.createdAt, which is when it was recorded.
     @Column(nullable = false)
     private LocalDate paymentDate;
 

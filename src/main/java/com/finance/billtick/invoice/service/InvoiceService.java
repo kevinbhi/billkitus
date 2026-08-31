@@ -7,17 +7,21 @@ import com.finance.billtick.customer.repository.CustomerRepository;
 import com.finance.billtick.exception.DuplicateResourceException;
 import com.finance.billtick.exception.InvalidInvoiceStateException;
 import com.finance.billtick.exception.InvalidPricingException;
+import com.finance.billtick.exception.InvalidRelationException;
 import com.finance.billtick.exception.ResourceInUseException;
 import com.finance.billtick.exception.ResourceNotFoundException;
+import com.finance.billtick.invoice.dto.InvoiceDashboardResponse;
 import com.finance.billtick.invoice.dto.InvoiceItemRequest;
 import com.finance.billtick.invoice.dto.InvoicePatchRequest;
 import com.finance.billtick.invoice.dto.InvoiceRequest;
 import com.finance.billtick.invoice.dto.InvoiceResponse;
+import com.finance.billtick.invoice.dto.OverdueInvoiceResponse;
 import com.finance.billtick.invoice.mapper.InvoiceMapper;
 import com.finance.billtick.invoice.model.Invoice;
 import com.finance.billtick.invoice.model.InvoiceItem;
 import com.finance.billtick.invoice.model.InvoiceStatus;
 import com.finance.billtick.invoice.model.PaymentStatus;
+import com.finance.billtick.invoice.repository.CustomerMonthlyTotals;
 import com.finance.billtick.invoice.repository.InvoiceRepository;
 import com.finance.billtick.payment.repository.InvoicePaymentRepository;
 import com.finance.billtick.product.model.Product;
@@ -138,11 +142,34 @@ public class InvoiceService {
         return invoiceMapper.toInvoiceResponse(invoiceRepository.save(invoice));
     }
 
+    // Reads the stored OVERDUE status, which OverdueInvoiceScheduler maintains nightly. An
+    // invoice that passes its due date during the day therefore appears here after the next
+    // 1 AM run, not immediately -- the trade for having one stored definition of overdue.
     @Transactional(readOnly = true)
-    public List<InvoiceResponse> getOverdueInvoicesForBusiness(Long businessId) {
-        return invoiceMapper.toInvoiceResponseList(
-                invoiceRepository.findByBusinessAndStatusAndPaymentStatusNotAndDueDateBefore(
-                        assertBusiness(businessId), InvoiceStatus.SENT, PaymentStatus.PAID, LocalDate.now()));
+    public List<OverdueInvoiceResponse> getOverdueInvoicesForBusiness(Long businessId) {
+        return invoiceMapper.toOverdueInvoiceResponseList(
+                invoiceRepository.findOverdueByBusiness(
+                        assertBusiness(businessId), InvoiceStatus.SENT, PaymentStatus.OVERDUE));
+    }
+
+    @Transactional(readOnly = true)
+    public InvoiceDashboardResponse getCustomerMonthlySummary(Long customerId, int year, int month) {
+        Customer customer = assertCustomer(customerId);
+        LocalDate monthStart = assertPeriod(year, month);
+
+        CustomerMonthlyTotals totals = invoiceRepository.aggregateCustomerMonthlyTotals(
+                customer, monthStart, monthStart.plusMonths(1), InvoiceStatus.SENT, InvoiceStatus.VOID);
+
+        InvoiceDashboardResponse response = new InvoiceDashboardResponse();
+        response.setCustomerId(customerId);
+        response.setCustomerName(customer.getCustomerName());
+        response.setYear(year);
+        response.setMonth(month);
+        response.setTotalInvoices(totals.invoiceCount());
+        response.setTotalInvoicedAmount(scale(totals.totalInvoiced()));
+        response.setTotalCollectedAmount(scale(totals.totalCollected()));
+        response.setTotalOutstandingAmount(scale(totals.totalOutstanding()));
+        return response;
     }
 
     @Transactional
@@ -247,13 +274,27 @@ public class InvoiceService {
             throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
                     + " is already void");
         }
-        // Tests for money actually received rather than "anything other than UNPAID": OVERDUE
-        // is an unpaid invoice past its due date, and must stay voidable.
-        if (invoice.getPaymentStatus() == PaymentStatus.PARTIAL
-                || invoice.getPaymentStatus() == PaymentStatus.PAID) {
+
+        if (invoice.getBalanceDue().compareTo(invoice.getTotal()) < 0) {
             throw new InvalidInvoiceStateException("Invoice with id: " + invoice.getId()
                     + " cannot be voided because payments have been recorded against it");
         }
+    }
+
+
+    private LocalDate assertPeriod(int year, int month) {
+        if (month < 1 || month > 12) {
+            throw new InvalidRelationException("Month must be between 1 and 12, but was: " + month);
+        }
+        if (year < 1900 || year > 9999) {
+            throw new InvalidRelationException("Year must be between 1900 and 9999, but was: " + year);
+        }
+        return LocalDate.of(year, month, 1);
+    }
+
+    // Empty periods aggregate to null sums; the dashboard reports 0.00 rather than null.
+    private BigDecimal scale(BigDecimal amount) {
+        return (amount == null ? BigDecimal.ZERO : amount).setScale(AMOUNT_SCALE, RoundingMode.HALF_UP);
     }
 
     private void assertDueDate(Invoice invoice) {
@@ -309,11 +350,7 @@ public class InvoiceService {
         return issueDate.plusDays(parseTermDays(terms));
     }
 
-    // "Net 30" -> 30. "2/10 Net 30" -> 30 (the net term, not the discount rate). Terms with no
-    // net token ("Due on Receipt", "COD") fall back to same-day. Unrecognised input also falls
-    // back rather than throwing: this reads stored customer/business rows during invoice
-    // creation, and @Pattern never re-validates a row written by hand. The fallback is biased
-    // safe -- it makes the invoice due sooner, never later, so it cannot silently extend credit.
+
     private int parseTermDays(String terms) {
         if (terms == null) {
             return 0;
@@ -330,9 +367,7 @@ public class InvoiceService {
                 || !customer.getExemptionExpiryDate().isBefore(issueDate));
     }
 
-    // PREFIX-YEAR-SEQ, where SEQ is (highest existing sequence for this business this year) + 1.
-    // The high-water mark deliberately includes soft-deleted invoices: an issued number is
-    // never reused, so deleting the latest invoice does not free its number for the next one.
+
     private String generateInvoiceNumber(Business business, int year) {
         String prefix = business.getInvoicePrefix() + "-" + year + "-";
         long sequence = Optional.ofNullable(
@@ -342,8 +377,7 @@ public class InvoiceService {
         return prefix + String.format("%0" + SEQUENCE_WIDTH + "d", sequence);
     }
 
-    // invoicePrefix is user-supplied, and a hand-written native LIKE does not get the wildcard
-    // escaping Spring Data applies to a StartingWith derived query. Pairs with escape '\' there.
+
     private String likePrefix(String prefix) {
         return prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
     }
@@ -356,7 +390,7 @@ public class InvoiceService {
         }
     }
 
-    // Product price wins; the request's unitPrice is the fallback.
+
     private BigDecimal resolveUnitPrice(Product product, InvoiceItemRequest itemRequest) {
         BigDecimal price = product.getSellingPrice() != null
                 ? product.getSellingPrice()

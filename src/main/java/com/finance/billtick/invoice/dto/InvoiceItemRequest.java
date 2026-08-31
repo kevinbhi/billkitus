@@ -19,7 +19,7 @@ public class InvoiceItemRequest {
     @Digits(integer = 10, fraction = 2, message = "Quantity must have at most 2 decimal places")
     private BigDecimal quantity;
 
-    // Optional fallback - used only if the product has no sellingPrice of its own.
+
     @PositiveOrZero(message = "UnitPrice must be zero or positive")
     @Digits(integer = 15, fraction = 2, message = "UnitPrice must have at most 2 decimal places")
     private BigDecimal unitPrice;

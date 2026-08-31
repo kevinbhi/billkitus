@@ -58,11 +58,7 @@ public class Invoice extends BaseEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal taxRate;
 
-    // USD is the only supported currency, but it is stored per-invoice rather than assumed
-    // globally: an invoice is a document of record, and a constant cannot be back-dated, so
-    // adding a second currency later would silently re-denominate every historical invoice.
-    // Deliberately a String, not an enum -- a string-mapped enum generates a CHECK constraint
-    // that ddl-auto: update can never alter afterwards.
+
     @ColumnDefault("'USD'")
     @Column(nullable = false, length = 3)
     private String currency = "USD";
@@ -76,9 +72,7 @@ public class Invoice extends BaseEntity {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal total;
 
-    // Recomputed from total - sum(active payments) on every payment write, never decremented.
-    // The field initializer is required: @ColumnDefault only affects DDL, and Hibernate always
-    // includes the column in the INSERT.
+
     @ColumnDefault("0")
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balanceDue = BigDecimal.ZERO;
@@ -89,7 +83,6 @@ public class Invoice extends BaseEntity {
     @Column(nullable = false, length = 50)
     private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
 
-    // Guards against two concurrent payments both reading the same balance and one being lost.
     @Version
     @ColumnDefault("0")
     private long version;

@@ -14,16 +14,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
-    // InvoiceResponse carries the line items, so every list mapping initialises the lazy
-    // items collection -- one SELECT per invoice without these. Hibernate 6+ de-duplicates
-    // collection fetches automatically, so no distinct is needed (and adding one would be wrong).
-    // NOTE for whoever adds pagination: @EntityGraph on a collection + Pageable makes Hibernate
-    // fetch everything and paginate in memory (HHH000104). Switch to a two-step id query then.
     @Override
     @EntityGraph(attributePaths = "items")
     List<Invoice> findAll();
@@ -31,14 +27,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @EntityGraph(attributePaths = "items")
     List<Invoice> findByBusiness(Business business);
 
-    // Highest invoice number for a business matching "PREFIX-YEAR-%". Fixed-width zero padding
-    // makes lexical max == numeric max.
-    //
-    // Deliberately native: @SQLRestriction is applied to every entity root regardless of the
-    // select clause, so no JPQL or derived query can see soft-deleted invoices -- and an ISSUED
-    // number must never be reused, even if its invoice was later deleted. Reusing one is an
-    // accounting error, and it also collides with the (unfiltered) uk_invoice_business index.
-    // Returns null when the business has no invoices for that year.
     @Query(value = """
            select max(invoice_number) from invoice
            where business_id = :businessId and invoice_number like :pattern escape '\\'
@@ -52,18 +40,20 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     boolean existsByInvoiceNumberAndIdNot(String invoiceNumber, Long id);
 
-    // Issued, not fully settled, and past due. Overdue is never stored, so it is expressed here.
-    @EntityGraph(attributePaths = "items")
-    List<Invoice> findByBusinessAndStatusAndPaymentStatusNotAndDueDateBefore(
-            Business business, InvoiceStatus status, PaymentStatus paymentStatus, LocalDate date);
 
-    // Every dashboard scalar in one pass, so the service never materialises an Invoice.
-    // count(case .. then 1 end) rather than sum(case .. then 1 else 0 end): count over an
-    // all-null set returns 0 rather than null, which keeps the primitive long components safe.
-    // The sums carry no else arm on purpose -- it avoids unifying BigDecimal with an integer
-    // literal -- so they are null only when the business has zero invoices; scale() absorbs it.
-    // The unpaid bucket counts OVERDUE as well -- that is an unpaid invoice past its due date,
-    // so leaving it out would stop the three status counts summing to the invoice count.
+    List<Invoice> findByStatusAndPaymentStatusInAndDueDateBefore(
+            InvoiceStatus status, Collection<PaymentStatus> paymentStatuses, LocalDate date);
+
+    @Query("""
+           select i from Invoice i
+           join fetch i.customer
+           where i.business = :business and i.status = :sent and i.paymentStatus = :overdue
+           order by i.dueDate asc
+           """)
+    List<Invoice> findOverdueByBusiness(@Param("business") Business business,
+                                        @Param("sent") InvoiceStatus sent,
+                                        @Param("overdue") PaymentStatus overdue);
+
     @Query("""
            select new com.finance.billtick.invoice.repository.InvoiceTotals(
              sum(case when i.status = :sent then i.total end),
@@ -116,5 +106,22 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
                                @Param("day30") LocalDate day30,
                                @Param("day60") LocalDate day60,
                                @Param("day90") LocalDate day90);
+
+
+    @Query("""
+           select new com.finance.billtick.invoice.repository.CustomerMonthlyTotals(
+             count(i),
+             sum(case when i.status = :sent then i.total end),
+             sum(case when i.status <> :voided then i.total - i.balanceDue end),
+             sum(case when i.status = :sent then i.balanceDue end))
+           from Invoice i
+           where i.customer = :customer
+             and i.issueDate >= :monthStart and i.issueDate < :nextMonthStart
+           """)
+    CustomerMonthlyTotals aggregateCustomerMonthlyTotals(@Param("customer") Customer customer,
+                                                         @Param("monthStart") LocalDate monthStart,
+                                                         @Param("nextMonthStart") LocalDate nextMonthStart,
+                                                         @Param("sent") InvoiceStatus sent,
+                                                         @Param("voided") InvoiceStatus voided);
 
 }

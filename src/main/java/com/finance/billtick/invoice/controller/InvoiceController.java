@@ -1,8 +1,10 @@
 package com.finance.billtick.invoice.controller;
 
+import com.finance.billtick.invoice.dto.InvoiceDashboardResponse;
 import com.finance.billtick.invoice.dto.InvoicePatchRequest;
 import com.finance.billtick.invoice.dto.InvoiceRequest;
 import com.finance.billtick.invoice.dto.InvoiceResponse;
+import com.finance.billtick.invoice.dto.OverdueInvoiceResponse;
 import com.finance.billtick.invoice.service.InvoiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,12 +62,18 @@ public class InvoiceController {
     }
 
     @GetMapping("/overdue")
-    public ResponseEntity<List<InvoiceResponse>> getOverdueInvoicesForBusiness(@RequestParam Long businessId) {
+    public ResponseEntity<List<OverdueInvoiceResponse>> getOverdueInvoicesForBusiness(@RequestParam Long businessId) {
         return ResponseEntity.ok(invoiceService.getOverdueInvoicesForBusiness(businessId));
     }
 
-    // Named action endpoints rather than a generic status PATCH, so illegal transitions
-    // cannot be requested at all.
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<InvoiceDashboardResponse> getCustomerMonthlySummary(
+            @RequestParam Long customerId, @RequestParam int year, @RequestParam int month) {
+        return ResponseEntity.ok(invoiceService.getCustomerMonthlySummary(customerId, year, month));
+    }
+
+
     @PostMapping(value = "/{id}/send")
     public ResponseEntity<InvoiceResponse> sendInvoice(@PathVariable Long id) {
         return ResponseEntity.ok(invoiceService.sendInvoice(id));
