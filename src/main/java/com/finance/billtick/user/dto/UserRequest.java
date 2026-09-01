@@ -3,6 +3,7 @@ package com.finance.billtick.user.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import com.finance.billtick.user.model.Role;
 
 @Getter
 @Setter
@@ -27,4 +28,7 @@ public class UserRequest {
     @NotBlank(message = "Phone is required")
     @Size(min = 10, message = "Phone must be at least 10 characters")
     private String phone;
+
+    @NotNull(message = "Role is required")
+    private Role role;
 }

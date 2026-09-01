@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.List;
 
@@ -27,6 +29,11 @@ public class User extends BaseEntity {
     private String lastName;
     private String phone;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @ColumnDefault("'USER'")
+    @Column(nullable = false, length = 50)
+    private Role role = Role.USER;
     @ColumnDefault("1")
     @Column(name = "is_active", nullable = false)
     private boolean active = true;

@@ -9,6 +9,7 @@ import com.finance.billtick.user.model.User;
 import com.finance.billtick.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -19,10 +20,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
+
 
     @Transactional
     public UserResponse createUser(UserRequest userRequest) {
         User user = userMapper.toUser(userRequest);
+        user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         return userMapper.toUserResponse(userRepository.save(user));
     }
 

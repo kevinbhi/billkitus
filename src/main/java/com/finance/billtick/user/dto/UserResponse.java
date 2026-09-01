@@ -1,5 +1,5 @@
 package com.finance.billtick.user.dto;
-
+import com.finance.billtick.user.model.Role;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,4 +12,5 @@ public class UserResponse {
     private String firstName;
     private String lastName;
     private String phone;
+    private Role role; 
 }
